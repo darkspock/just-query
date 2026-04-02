@@ -49,6 +49,7 @@ final class Command extends AbstractPdoCommand
 
         $params = [];
         $insertSql = $this->db->getQueryBuilder()->insert($table, $columns, $params);
+        /** @phpstan-ignore argument.type */
         $this->setSql($insertSql)->bindValues($params);
 
         $this->execute();
@@ -65,7 +66,7 @@ final class Command extends AbstractPdoCommand
             if ($column->isAutoIncrement()) {
                 $value = $this->db->getLastInsertId();
             } else {
-                /** @var array $columns */
+                /** @var array<int|string, mixed> $columns */
                 $value = $columns[$name] ?? $column->getDefaultValue();
             }
 
@@ -94,22 +95,26 @@ final class Command extends AbstractPdoCommand
 
         $params = [];
         $sql = $this->getQueryBuilder()
-            ->upsertReturning($table, $insertColumns, $updateColumns, $returnColumns, $params);
+            ->upsertReturning($table, $insertColumns, $updateColumns, /** @phpstan-ignore argument.type */ $returnColumns, $params);
 
+        /** @phpstan-ignore argument.type */
         $this->setSql($sql)->bindValues($params);
         $this->queryInternal(self::QUERY_MODE_EXECUTE);
 
-        /** @psalm-var PDOStatement $this->pdoStatement */
-        $this->pdoStatement->nextRowset();
+        /** @var PDOStatement $pdoStatement */
+        $pdoStatement = $this->pdoStatement;
+        $pdoStatement->nextRowset();
         /** @psalm-var array<string,mixed> $result */
-        $result = $this->pdoStatement->fetch(PDO::FETCH_ASSOC);
-        $this->pdoStatement->closeCursor();
+        $result = $pdoStatement->fetch(PDO::FETCH_ASSOC);
+        $pdoStatement->closeCursor();
 
-        if (!$this->phpTypecasting) {
+        $phpTypecasting = $this->phpTypecasting;
+        if (!$phpTypecasting) {
             return $result;
         }
 
-        $columns = $this->db->getTableSchema($table)?->getColumns();
+        $db = $this->db;
+        $columns = $db->getTableSchema($table)?->getColumns();
 
         if (empty($columns)) {
             return $result;
@@ -122,12 +127,16 @@ final class Command extends AbstractPdoCommand
         return $result;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function showDatabases(): array
     {
         $sql = <<<SQL
         SHOW DATABASES WHERE `Database` NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')
         SQL;
 
+        /** @var array<int, string> */
         return $this->setSql($sql)->queryColumn();
     }
 

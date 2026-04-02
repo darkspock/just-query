@@ -63,9 +63,9 @@ final class StructuredParser
     private function parseQuotedString(string $value, int &$i): string
     {
         preg_match('/(?>[^"\\\\]+|\\\\.)*/', $value, $matches, 0, $i + 1);
-        $i += strlen($matches[0]) + 2;
+        $i += strlen($matches[0]) + 2; // @phpstan-ignore offsetAccess.notFound
 
-        return stripslashes($matches[0]);
+        return stripslashes($matches[0]); // @phpstan-ignore offsetAccess.notFound
     }
 
     /**

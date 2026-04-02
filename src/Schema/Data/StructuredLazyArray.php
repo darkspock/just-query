@@ -14,9 +14,14 @@ use const JSON_THROW_ON_ERROR;
  */
 final class StructuredLazyArray extends AbstractStructuredLazyArray
 {
+    /**
+     * @return array<string, mixed>|null
+     */
     protected function parse(string $value): ?array
     {
-        /** @var array|null */
+        /**
+         * @var array<string, mixed>|null
+         */
         return json_decode($value, true, 512, JSON_THROW_ON_ERROR);
     }
 }

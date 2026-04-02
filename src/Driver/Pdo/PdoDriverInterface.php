@@ -21,7 +21,7 @@ interface PdoDriverInterface extends DriverInterface
      * Please refer to the [PHP manual](https://php.net/manual/en/pdo.setattribute.php) for details about available
      * attributes.
      *
-     * @param array $attributes The attributes (name => value) to set on the DB connection.
+     * @param array<int, mixed> $attributes The attributes (name => value) to set on the DB connection.
      */
     public function attributes(array $attributes): void;
 

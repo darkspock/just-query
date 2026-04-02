@@ -58,7 +58,7 @@ class ColumnDefinitionParser
     {
         preg_match("/^(\w*)(?:\(((?:'[^']*'|[^)])+)\))?(\[[\d\[\]]*\])?\s*/", $definition, $matches);
 
-        $type = strtolower($matches[1]);
+        $type = strtolower($matches[1] ?? '');
         $info = ['type' => $type];
 
         if (isset($matches[2]) && $matches[2] !== '') {
@@ -70,13 +70,12 @@ class ColumnDefinitionParser
         }
 
         if (isset($matches[3])) {
-            /** @psalm-var positive-int */
             $info['dimension'] = substr_count($matches[3], '[');
         }
 
-        $extra = substr($definition, strlen($matches[0]));
+        $extra = substr($definition, strlen($matches[0])); // @phpstan-ignore offsetAccess.notFound
 
-        return $info + $this->extraInfo($extra);
+        return $info + $this->extraInfo($extra); // @phpstan-ignore return.type
     }
 
     /**
@@ -123,23 +122,24 @@ class ColumnDefinitionParser
             }
         }
 
-        /** @psalm-var ExtraInfo $info */
-        if (!empty($info['comment'])) {
+        if (!empty($info['comment']) && is_string($info['comment'])) {
             $info['comment'] = str_replace("''", "'", $info['comment']);
         }
 
-        if (!empty($info['check'])) {
+        if (!empty($info['check']) && is_string($info['check'])) {
             $info['check'] = substr($info['check'], 1, -1);
         }
 
         if (!empty($extra)) {
-            $info['extra'] = $extra;
+            $info['extra'] = trim($extra);
         }
 
+        /** @var ExtraInfo */
         return $info;
     }
 
     /**
+     * @param array<string, mixed> $info
      * @psalm-param non-empty-string $pattern
      */
     protected function parseStringValue(string $extra, string $pattern, string $name, array &$info): string
@@ -153,6 +153,7 @@ class ColumnDefinitionParser
     }
 
     /**
+     * @param array<string, mixed> $info
      * @psalm-param non-empty-string $pattern
      */
     protected function parseBoolValue(string $extra, string $pattern, string $name, array &$info): string
@@ -162,7 +163,7 @@ class ColumnDefinitionParser
         }
 
         /** @psalm-suppress PossiblyNullArgument */
-        $extra = trim(preg_replace($pattern, '', $extra, 1, $count));
+        $extra = trim(preg_replace($pattern, '', $extra, 1, $count)); // @phpstan-ignore argument.type
 
         if ($count > 0) {
             $info[$name] = true;

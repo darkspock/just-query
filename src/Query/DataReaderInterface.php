@@ -46,13 +46,15 @@ interface DataReaderInterface extends Iterator, Countable
      * Returns the current row or false if there is no row at the current position.
      *
      * This method is required by the interface {@see Iterator}.
+     *
+     * @return array<string, mixed>|object|false
      */
     public function current(): array|object|false;
 
     /**
      * Sets `indexBy` property.
      *
-     * @param Closure|string|null $indexBy The name of the column by which the query results should be indexed by.
+     * @param (Closure(array|object): int)|string|null $indexBy The name of the column by which the query results should be indexed by.
      * This can also be a `Closure` instance (for example, anonymous function) that returns the index value based
      * on the given row data.
      *
@@ -91,7 +93,7 @@ interface DataReaderInterface extends Iterator, Countable
      * Sets the columns for type casting the query results.
      * Do not use this method if you want to get the raw data from the query.
      *
-     * @param ColumnInterface[] $typecastColumns
+     * @param array<string, ColumnInterface> $typecastColumns
      * @psalm-param array<string,ColumnInterface> $typecastColumns
      */
     public function typecastColumns(array $typecastColumns): static;

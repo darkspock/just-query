@@ -100,8 +100,8 @@ class DateTimeColumn extends AbstractColumn
         return match (gettype($value)) {
             GettypeResult::NULL => null,
             GettypeResult::STRING => $this->dbTypecastString($value),
-            GettypeResult::INTEGER => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U', (string) $value)),
-            GettypeResult::DOUBLE => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U.u', (string) $value)),
+            GettypeResult::INTEGER => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U', (string) $value)), // @phpstan-ignore argument.type
+            GettypeResult::DOUBLE => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U.u', (string) $value)), // @phpstan-ignore argument.type
             GettypeResult::OBJECT => match (true) {
                 $value instanceof DateTimeImmutable => $this->dbTypecastDateTime($value),
                 $value instanceof DateTimeInterface => $this->dbTypecastDateTime(DateTimeImmutable::createFromInterface($value)),
@@ -189,7 +189,7 @@ class DateTimeColumn extends AbstractColumn
      */
     protected function getPhpTimezone(): string
     {
-        return empty($this->phpTimezone)
+        return empty($this->phpTimezone) // @phpstan-ignore return.type
             ? date_default_timezone_get()
             : $this->phpTimezone;
     }
@@ -216,8 +216,8 @@ class DateTimeColumn extends AbstractColumn
         /** @psalm-suppress PossiblyFalseArgument */
         return match ($value) {
             '' => null,
-            (string) (int) $value => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U', $value)),
-            (string) (float) $value => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U.u', $value)),
+            (string) (int) $value => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U', $value)), // @phpstan-ignore argument.type
+            (string) (float) $value => $this->dbTypecastDateTime(DateTimeImmutable::createFromFormat('U.u', $value)), // @phpstan-ignore argument.type
             default => ($datetime = date_create_immutable($value, new DateTimeZone($this->getPhpTimezone()))) !== false
                 ? $this->dbTypecastDateTime($datetime)
                 : $value,

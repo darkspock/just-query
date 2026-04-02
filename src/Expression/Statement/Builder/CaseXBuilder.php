@@ -26,7 +26,7 @@ class CaseXBuilder implements ExpressionBuilderInterface
      * Builds an SQL `CASE` expression from the given {@see CaseX} object.
      *
      * @param CaseX $expression The `CASE` expression to build.
-     * @param array $params The parameters to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters to be bound to the query.
      *
      * @return string SQL `CASE` expression.
      */
@@ -53,6 +53,7 @@ class CaseXBuilder implements ExpressionBuilderInterface
     /**
      * Builds the case value part of the CASE expression based on their type.
      *
+     * @param array<int|string, mixed> $params
      * @return string The SQL condition string.
      */
     protected function buildCaseValue(mixed $value, array &$params): string
@@ -60,9 +61,10 @@ class CaseXBuilder implements ExpressionBuilderInterface
         /**
          * @var string
          * @psalm-suppress MixedArgument
+         * @phpstan-var array<string, mixed> $arrayValue
          */
         return match (gettype($value)) {
-            GettypeResult::ARRAY => $this->queryBuilder->buildCondition($value, $params),
+            GettypeResult::ARRAY => $this->queryBuilder->buildCondition($arrayValue = $value, $params), // @phpstan-ignore argument.type, argument.type
             GettypeResult::STRING => $this->queryBuilder->getQuoter()->quoteColumnName($value),
             default => $this->queryBuilder->buildValue($value, $params),
         };
@@ -71,12 +73,14 @@ class CaseXBuilder implements ExpressionBuilderInterface
     /**
      * Builds the condition part of the CASE expression based on their type.
      *
+     * @param array<int|string, mixed> $params
      * @return string The SQL condition string.
      */
     protected function buildCondition(mixed $condition, array &$params): string
     {
         if (is_array($condition)) {
-            return $this->queryBuilder->buildCondition($condition, $params);
+            /** @phpstan-var array<string, mixed> $condition */
+            return $this->queryBuilder->buildCondition($condition, $params); // @phpstan-ignore argument.type
         }
 
         return $this->queryBuilder->buildValue($condition, $params);

@@ -37,7 +37,7 @@ final class JsonValueBuilder implements ExpressionBuilderInterface
      * The method builds the raw SQL from the `$expression` that won't be additionally escaped or quoted.
      *
      * @param JsonValue $expression The expression to build.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The raw SQL that won't be additionally escaped or quoted.
      */
@@ -63,7 +63,7 @@ final class JsonValueBuilder implements ExpressionBuilderInterface
         }
 
         if ($value instanceof ExpressionInterface) {
-            return $this->queryBuilder->buildExpression($value, $params);
+            return $this->queryBuilder->buildExpression($value, $params); // @phpstan-ignore argument.type
         }
 
         return $this->buildValue($value, $params);
@@ -71,18 +71,20 @@ final class JsonValueBuilder implements ExpressionBuilderInterface
 
     /**
      * Builds a SQL expression for a string value.
+     *
+     * @param array<int|string, mixed> $params
      */
     protected function buildStringValue(string $value, array &$params): string
     {
         $param = new Param($value, DataType::STRING);
 
-        return $this->queryBuilder->bindParam($param, $params);
+        return $this->queryBuilder->bindParam($param, $params); // @phpstan-ignore argument.type
     }
 
     /**
      * Builds a SQL expression for an array value.
      *
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      */
     protected function buildValue(mixed $value, array &$params): string
     {

@@ -13,12 +13,13 @@ final class StructuredColumn extends AbstractStructuredColumn
 {
     /**
      * @param string|null $value
+     * @return array<string, mixed>|null
      * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function phpTypecast(mixed $value): ?array
     {
         if (is_string($value)) {
-            return (new StructuredLazyArray($value, $this->columns))->getValue();
+            return (new StructuredLazyArray($value, $this->columns))->getValue(); // @phpstan-ignore return.type
         }
 
         return $value;

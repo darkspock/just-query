@@ -27,6 +27,7 @@ final class QueryExpressionBuilder implements ExpressionBuilderInterface
 
     /**
      * @param QueryInterface $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws Exception
      * @throws InvalidArgumentException
@@ -35,6 +36,7 @@ final class QueryExpressionBuilder implements ExpressionBuilderInterface
      */
     public function build(ExpressionInterface $expression, array &$params = []): string
     {
+        /** @phpstan-ignore argument.type */
         [$sql, $params] = $this->queryBuilder->build($expression, $params);
         return "($sql)";
     }

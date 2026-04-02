@@ -140,7 +140,7 @@ interface CommandInterface
      *
      * @param string $table The name of the table to add primary key constraint to.
      * @param string $name The name of the primary key constraint.
-     * @param string|string[] $columns The comma separated string or array of columns that the primary key consists of.
+     * @param array<string>|string $columns The comma separated string or array of columns that the primary key consists of.
      *
      * Note: The method will quote the `name`, `table`, and `column` parameters before using them in the generated SQL.
      */
@@ -197,7 +197,7 @@ interface CommandInterface
      *
      * @param string $table The name of the table to insert new rows into.
      * @param iterable $rows The rows to be batch inserted into the table.
-     * @param string[] $columns The column names.
+     * @param array<string> $columns The column names.
      *
      * @throws Exception
      * @throws InvalidArgumentException
@@ -237,7 +237,7 @@ interface CommandInterface
      *
      * @param string $table The name of the table to add unique constraint to.
      * @param string $name The name of the unique constraint.
-     * @param string|string[] $columns The name of the column to add unique constraint to. If there are
+     * @param array<string>|string $columns The name of the column to add unique constraint to. If there are
      * many columns, use an array or separate them with commas.
      *
      * Note: The method will quote the `name`, `table`, and `column` parameters before using them in the generated SQL.
@@ -265,7 +265,7 @@ interface CommandInterface
      *
      * Note that the SQL data type of each value is determined by its PHP type.
      *
-     * @param array|Param[] $values The values to bind. This must be given in terms of an associative
+     * @param array<string, mixed>|Param[] $values The values to bind. This must be given in terms of an associative
      * array with array keys being the parameter names, and an array values the corresponding parameter values,
      * for example, `[':name' => 'John Doe', ':age' => 25]`.
      * By default, the SQL data type of each value is determined by its PHP type.
@@ -358,7 +358,7 @@ interface CommandInterface
      * The method will quote the `table` and `columns` parameter before using it in the generated SQL.
      *
      * @param string $table The name of the table to create.
-     * @param (ColumnInterface|ExpressionInterface|string)[] $columns The columns (name => definition) in the new table.
+     * @param array<string, ColumnInterface|ExpressionInterface|string> $columns The columns (name => definition) in the new table.
      * The definition can be `string`, or {@see ColumnInterface} or {@see ExpressionInterface} instance.
      * @param string|null $options More SQL fragments to append to the generated SQL.
      *
@@ -403,9 +403,9 @@ interface CommandInterface
      * Note that the created command isn't executed until you call {@see execute()}.
      *
      * @param string $table The table to delete data from.
-     * @param array|string $condition The condition to put in the `WHERE` part. Please refer to
+     * @param array<string, mixed>|string $condition The condition to put in the `WHERE` part. Please refer to
      * {@see QueryInterface::where()} on how to specify condition.
-     * @param array $params The parameters to bind to the command.
+     * @param array<int|string, mixed> $params The parameters to bind to the command.
      *
      * @throws Exception
      * @throws InvalidArgumentException
@@ -547,9 +547,9 @@ interface CommandInterface
      * @param bool $asValues By default, returns an array of name => value pairs. If set to `true`, returns an array of
      * {@see Param}.
      *
-     * @psalm-return array|Param[]
+     * @return array<string, mixed>|Param[] The params used in the last query.
      *
-     * @return array The params used in the last query.
+     * @psalm-return array|Param[]
      */
     public function getParams(bool $asValues = true): array;
 
@@ -593,7 +593,7 @@ interface CommandInterface
      * Note that the created command isn't executed until you call {@see execute()}.
      *
      * @param string $table The name of the table to insert new rows into.
-     * @param array|QueryInterface $columns The column data (name => value) to insert into the table or an instance of
+     * @param array<string, mixed>|QueryInterface $columns The column data (name => value) to insert into the table or an instance of
      * {@see QueryInterface} to perform `INSERT INTO ... SELECT` SQL statement.
      *
      * @throws Exception
@@ -610,7 +610,7 @@ interface CommandInterface
      * Executes the INSERT command, returning primary key inserted values.
      *
      * @param string $table The name of the table to insert new rows into.
-     * @param array|QueryInterface $columns The column data (name => value) to insert into the table or an instance of
+     * @param array<string, mixed>|QueryInterface $columns The column data (name => value) to insert into the table or an instance of
      * {@see QueryInterface} to perform `INSERT INTO ... SELECT` SQL statement.
      *
      * @throws Exception
@@ -618,7 +618,7 @@ interface CommandInterface
      * @throws InvalidConfigException
      * @throws Throwable
      *
-     * @return array The primary key values.
+     * @return array<string, mixed> The primary key values.
      *
      * Note: The method will quote the `table` and `columns` parameter before using it in the generated SQL.
      *
@@ -659,7 +659,7 @@ interface CommandInterface
      * @throws Exception
      * @throws Throwable If execution failed.
      *
-     * @return array[] All rows of the query result. Each array element is an `array` representing a row of data.
+     * @return array<array<string, mixed>> All rows of the query result. Each array element is an `array` representing a row of data.
      * Empty array if the query results in nothing.
      *
      * @psalm-return list<array>
@@ -675,7 +675,7 @@ interface CommandInterface
      * @throws Exception
      * @throws Throwable If execution failed.
      *
-     * @return array The first column of the query result. Empty array if the query results in nothing.
+     * @return array<int, mixed> The first column of the query result. Empty array if the query results in nothing.
      */
     public function queryColumn(): array;
 
@@ -750,6 +750,8 @@ interface CommandInterface
 
     /**
      * List all database names in the current connection.
+     *
+     * @return array<int, string>
      */
     public function showDatabases(): array;
 
@@ -842,12 +844,12 @@ interface CommandInterface
      * Note that the created command isn't executed until you call {@see execute()}.
      *
      * @param string $table The name of the table to update.
-     * @param array $columns The column data (name => value) to update.
-     * @param array|ExpressionInterface|string $condition The condition to put in the WHERE part. Please refer to
+     * @param array<string, mixed> $columns The column data (name => value) to update.
+     * @param array<string, mixed>|ExpressionInterface|string $condition The condition to put in the WHERE part. Please refer to
      * {@see QueryPartsInterface::where()} on how to specify condition.
-     * @param array|ExpressionInterface|string|null $from The FROM part. Please refer to {@see QueryPartsInterface::from()}
+     * @param array<string, mixed>|ExpressionInterface|string|null $from The FROM part. Please refer to {@see QueryPartsInterface::from()}
      * on how to specify FROM part.
-     * @param array $params The parameters to bind to the command.
+     * @param array<int|string, mixed> $params The parameters to bind to the command.
      *
      * @psalm-param RawFrom|null $from
      * @psalm-param ParamsType $params
@@ -891,7 +893,7 @@ interface CommandInterface
      * @param string $table The name of the table to insert rows into or update rows in.
      * @param array|QueryInterface $insertColumns The column data (name => value) to insert into the table or an
      * instance of {@see QueryInterface} to perform `INSERT INTO ... SELECT` SQL statement.
-     * @param array|bool $updateColumns The column data (name => value) to update if it already exists.
+     * @param array<int|string, mixed>|bool $updateColumns The column data (name => value) to update if it already exists.
      * If `true` is passed, the column data will be updated to match the insert column data.
      * If `false` is passed, no update will be performed if the column data already exist.
      *
@@ -901,7 +903,6 @@ interface CommandInterface
      * @throws NotSupportedException
      *
      * @psalm-param array<string, mixed>|QueryInterface $insertColumns
-     * @psalm-param ParamsType $params
      *
      * Note: The method will quote the `table` and `insertColumns`, `updateColumns` parameters before using it in the
      * generated SQL.
@@ -919,20 +920,21 @@ interface CommandInterface
      * it in the generated SQL.
      *
      * @param string $table The name of the table to insert rows into or update rows in.
-     * @param array|QueryInterface $insertColumns The column data (name => value) to insert into the table or an
+     * @param array<string, mixed>|QueryInterface $insertColumns The column data (name => value) to insert into the table or an
      * instance of {@see QueryInterface} to perform `INSERT INTO ... SELECT` SQL statement.
-     * @param array|bool $updateColumns The column data (name => value) to update if it already exists.
+     * @param array<int|string, mixed>|bool $updateColumns The column data (name => value) to update if it already exists.
      * If `true` is passed, the column data will be updated to match the insert column data.
      * If `false` is passed, no update will be performed if the column data already exist.
-     * @param string[]|null $returnColumns The column names to return values from. `null` means all columns.
+     * @param array<string>|null $returnColumns The column names to return values from. `null` means all columns.
      *
      * @throws Exception
      * @throws InvalidConfigException
      * @throws JsonException
      * @throws NotSupportedException
      *
+     * @return array<string, mixed>
+     *
      * @psalm-param array<string, mixed>|QueryInterface $insertColumns
-     * @psalm-param ParamsType $params
      * @psalm-return array<string, mixed>
      *
      * @see upsertReturningPks()
@@ -951,9 +953,9 @@ interface CommandInterface
      * generated SQL.
      *
      * @param string $table The name of the table to insert rows into or update rows in.
-     * @param array|QueryInterface $insertColumns The column data (name => value) to insert into the table or an
+     * @param array<string, mixed>|QueryInterface $insertColumns The column data (name => value) to insert into the table or an
      * instance of {@see QueryInterface} to perform `INSERT INTO ... SELECT` SQL statement.
-     * @param array|bool $updateColumns The column data (name => value) to update if it already exists.
+     * @param array<int|string, mixed>|bool $updateColumns The column data (name => value) to update if it already exists.
      * If `true` is passed, the column data will be updated to match the insert column data.
      * If `false` is passed, no update will be performed if the column data already exist.
      *
@@ -962,8 +964,9 @@ interface CommandInterface
      * @throws JsonException
      * @throws NotSupportedException
      *
+     * @return array<string, mixed>
+     *
      * @psalm-param array<string, mixed>|QueryInterface $insertColumns
-     * @psalm-param ParamsType $params
      *
      * @see upsertReturning()
      */

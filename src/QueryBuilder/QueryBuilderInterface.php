@@ -32,7 +32,7 @@ interface QueryBuilderInterface extends DDLQueryBuilderInterface, DMLQueryBuilde
     /**
      * Helper method to add `$value` to `$params` array using {@see PARAM_PREFIX}.
      *
-     * @param array $params Passed by reference.
+     * @param array<int|string, mixed> $params Passed by reference.
      *
      * @return string The placeholder name in $params array.
      *
@@ -63,7 +63,7 @@ interface QueryBuilderInterface extends DDLQueryBuilderInterface, DMLQueryBuilde
      * - other values are bound as parameters.
      *
      * @param mixed $value The PHP value to be converted to SQL.
-     * @param array $params The parameters array to which the bound parameters will be added.
+     * @param array<int|string, mixed> $params The parameters array to which the bound parameters will be added.
      *
      * @throws InvalidArgumentException
      *
@@ -118,7 +118,7 @@ interface QueryBuilderInterface extends DDLQueryBuilderInterface, DMLQueryBuilde
      * Replaces placeholders in the SQL string with the corresponding values.
      *
      * @param string $sql SQL expression where the placeholder should be replaced.
-     * @param string[] $replacements Replacements for placeholders with placeholder names as keys and values as follows:
+     * @param array<int|string, string> $replacements Replacements for placeholders with placeholder names as keys and values as follows:
      * - quoted string values (name => value) use {@see prepareValue()} to prepare the values;
      * - new placeholder names prefixed with colon `:` (name => new name).
      *

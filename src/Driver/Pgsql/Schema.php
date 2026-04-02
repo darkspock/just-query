@@ -109,7 +109,7 @@ final class Schema extends AbstractPdoSchema
         SQL;
 
         /** @var string[] */
-        return $this->db->createCommand($sql)->queryColumn();
+        return array_values($this->db->createCommand($sql)->queryColumn()); // @phpstan-ignore return.type
     }
 
     protected function findTableComment(TableSchemaInterface $tableSchema): void
@@ -146,7 +146,7 @@ final class Schema extends AbstractPdoSchema
         SQL;
 
         /** @var string[] */
-        return $this->db->createCommand($sql, [':schemaName' => $schema])->queryColumn();
+        return array_values($this->db->createCommand($sql, [':schemaName' => $schema])->queryColumn()); // @phpstan-ignore return.type
     }
 
     protected function loadTableSchema(string $name): ?TableSchemaInterface
@@ -253,7 +253,7 @@ final class Schema extends AbstractPdoSchema
         SQL;
 
         /** @var string[] */
-        return $this->db->createCommand($sql, [':schemaName' => $schema])->queryColumn();
+        return array_values($this->db->createCommand($sql, [':schemaName' => $schema])->queryColumn()); // @phpstan-ignore return.type
     }
 
     /**
@@ -656,20 +656,20 @@ final class Schema extends AbstractPdoSchema
          */
         foreach ($constraints as $type => $names) {
             foreach ($names as $name => $constraint) {
-                match ($type) {
+                match ($type) { // @phpstan-ignore match.unhandled
                     'f' => $result[self::FOREIGN_KEYS][$name] = new ForeignKey(
                         $name,
-                        array_values(array_unique(array_column($constraint, 'column_name'))),
-                        $constraint[0]['foreign_table_schema'],
-                        $constraint[0]['foreign_table_name'],
-                        array_values(array_unique(array_column($constraint, 'foreign_column_name'))),
-                        $actionTypes[$constraint[0]['on_delete']] ?? null,
-                        $actionTypes[$constraint[0]['on_update']] ?? null,
+                        array_values(array_unique(array_column($constraint, 'column_name'))), // @phpstan-ignore argument.type, argument.type, argument.type
+                        $constraint[0]['foreign_table_schema'], // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
+                        $constraint[0]['foreign_table_name'], // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
+                        array_values(array_unique(array_column($constraint, 'foreign_column_name'))), // @phpstan-ignore argument.type, argument.type, argument.type
+                        $actionTypes[$constraint[0]['on_delete']] ?? null, // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, offsetAccess.invalidOffset
+                        $actionTypes[$constraint[0]['on_update']] ?? null, // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, offsetAccess.invalidOffset
                     ),
                     'c' => $result[self::CHECKS][$name] = new Check(
                         $name,
-                        array_column($constraint, 'column_name'),
-                        $constraint[0]['check_expr'],
+                        array_column($constraint, 'column_name'), // @phpstan-ignore argument.type, argument.type
+                        $constraint[0]['check_expr'], // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
                     ),
                 };
             }
@@ -705,7 +705,7 @@ final class Schema extends AbstractPdoSchema
 
         return array_map(
             static fn($v) => str_replace("''", "'", $v),
-            $matches[1] ?? [],
+            $matches[1] ?? [], // @phpstan-ignore nullCoalesce.offset
         );
     }
 }

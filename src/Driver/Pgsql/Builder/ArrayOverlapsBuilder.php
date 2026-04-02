@@ -37,12 +37,15 @@ final class ArrayOverlapsBuilder implements ExpressionBuilderInterface
         $values = $expression->values;
 
         if (!$values instanceof ExpressionInterface) {
+            /** @phpstan-ignore argument.type */
             $values = new ArrayValue($values);
         } elseif ($values instanceof JsonValue) {
             /** @psalm-suppress MixedArgument */
+            /** @phpstan-ignore argument.type */
             $values = new ArrayValue($values->value);
         }
 
+        /** @phpstan-ignore argument.type */
         $values = $this->queryBuilder->buildExpression($values, $params);
 
         if (preg_match('/::\w+\[]$/', $values, $matches) === 1) {

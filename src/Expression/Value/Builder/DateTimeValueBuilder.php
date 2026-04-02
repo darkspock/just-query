@@ -56,6 +56,7 @@ final class DateTimeValueBuilder implements ExpressionBuilderInterface
 
     /**
      * @psalm-return ColumnInfo
+     * @return array<string, mixed>
      */
     private function prepareInfo(DateTimeValue $expression): array
     {

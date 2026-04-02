@@ -31,32 +31,35 @@ use const PHP_INT_SIZE;
  * @psalm-type ColumnClassNameDefinition = class-string<ColumnInterface>|Closure(ColumnType::*, ColumnInfo): (class-string<ColumnInterface>|null)
  * @psalm-type ColumnClassMap = array<ColumnType::*, ColumnClassNameDefinition>
  * @psalm-type TypeMap = array<string, ColumnType::*|Closure(string, ColumnInfo): (ColumnType::*|null)>
+ * @phpstan-type ColumnClassNameDefinition class-string<ColumnInterface>|Closure(string, array<string, mixed>): (class-string<ColumnInterface>|null)
+ * @phpstan-type ColumnClassMap array<string, class-string<ColumnInterface>|Closure(string, array<string, mixed>): (class-string<ColumnInterface>|null)>
+ * @phpstan-type TypeMap array<string, string|Closure(string, array<string, mixed>): (string|null)>
  */
 abstract class AbstractColumnFactory implements ColumnFactoryInterface
 {
     /**
      * @var string[] The mapping from physical column types (keys) to abstract column types (values).
-     *
-     * @psalm-var array<string, ColumnType::*>
      */
     protected const TYPE_MAP = [];
 
     /**
      * @psalm-var ColumnClassMap
+     * @phpstan-var array<string, class-string<ColumnInterface>|Closure(string, array<string, mixed>): (class-string<ColumnInterface>|null)>
      */
     protected readonly array $classMap;
 
     /**
      * @psalm-var array<ColumnType::*, array>
+     * @phpstan-var array<string, array<string, mixed>>
      */
     protected readonly array $classDefaults;
 
     /**
-     * @param array $map The mapping from physical column types to abstract column types. Where array keys
+     * @param array<string, mixed> $map The mapping from physical column types to abstract column types. Where array keys
      * are physical column types and values are corresponding abstract column types or PHP callable with the following
      * signature: `function (string $dbType, array &$info): string|null`. The callable should return the abstract type
      * based on the physical type and the column information or `null` if the abstract type cannot be determined.
-     * @param array $definitions Definitions of column classes that implement the abstract column types.
+     * @param array<string, mixed> $definitions Definitions of column classes that implement the abstract column types.
      * Keys are abstract column types represented by {@see ColumnType::*}.
      * Values can be:
      *  - a string specifying the class name that implements {@see ColumnInterface}.
@@ -94,6 +97,8 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
      *
      * @psalm-param TypeMap $map
      * @psalm-param array<ColumnType::*, ColumnClassNameDefinition|(array{0?:ColumnClassNameDefinition, ...})> $definitions
+     * @phpstan-param array<string, string|Closure(string, array<string, mixed>): (string|null)> $map
+     * @phpstan-param array<string, class-string<ColumnInterface>|Closure(string, array<string, mixed>): (class-string<ColumnInterface>|null)|array<int|string, mixed>> $definitions
      */
     public function __construct(
         protected array $map = [],
@@ -114,10 +119,13 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
             }
             $classMap[$type] = $value;
         }
-        $this->classMap = $classMap;
-        $this->classDefaults = $classDefaults;
+        $this->classMap = $classMap; // @phpstan-ignore assign.propertyType
+        $this->classDefaults = $classDefaults; // @phpstan-ignore assign.propertyType
     }
 
+    /**
+     * @phpstan-param array<string, mixed> $info
+     */
     public function fromDbType(string $dbType, array $info = []): ColumnInterface
     {
         $info['dbType'] = $dbType;
@@ -129,17 +137,20 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
         return $this->fromType($type, $info);
     }
 
+    /**
+     * @phpstan-param array<string, mixed> $info
+     */
     public function fromDefinition(string $definition, array $info = []): ColumnInterface
     {
         $definitionInfo = $this->columnDefinitionParser()->parse($definition);
 
         if (isset($info['extra'], $definitionInfo['extra'])) {
-            $info['extra'] = $definitionInfo['extra'] . ' ' . $info['extra'];
+            $info['extra'] = $definitionInfo['extra'] . ' ' . $info['extra']; // @phpstan-ignore binaryOp.invalid
             unset($definitionInfo['extra']);
         }
 
         /** @var string $type */
-        $type = $definitionInfo['type'] ?? '';
+        $type = $definitionInfo['type'] ?? ''; // @phpstan-ignore nullCoalesce.offset
         unset($definitionInfo['type']);
 
         $info = array_merge($info, $definitionInfo);
@@ -160,6 +171,9 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
         return $this->fromDbType($type, $info);
     }
 
+    /**
+     * @phpstan-param array<string, mixed> $info
+     */
     public function fromPseudoType(string $pseudoType, array $info = []): ColumnInterface
     {
         $info['primaryKey'] = true;
@@ -169,7 +183,7 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
             $info['unsigned'] = true;
         }
 
-        $type = match ($pseudoType) {
+        $type = match ($pseudoType) { // @phpstan-ignore match.unhandled
             PseudoType::PK => ColumnType::INTEGER,
             PseudoType::UPK => ColumnType::INTEGER,
             PseudoType::BIGPK => ColumnType::BIGINT,
@@ -181,6 +195,9 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
         return $this->fromType($type, $info);
     }
 
+    /**
+     * @phpstan-param array<string, mixed> $info
+     */
     public function fromType(string $type, array $info = []): ColumnInterface
     {
         $columnType = $info['type'] ?? $type;
@@ -189,17 +206,19 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
         if ($type === ColumnType::ARRAY || !empty($info['dimension'])) {
             if (empty($info['column'])) {
                 if (!empty($info['dbType']) && $info['dbType'] !== ColumnType::ARRAY) {
-                    /** @psalm-suppress ArgumentTypeCoercion */
-                    $info['column'] = $this->fromDbType(
-                        $info['dbType'],
-                        array_diff_key($info, ['dimension' => 1, 'defaultValueRaw' => 1]),
-                    );
+                    /**
+                     * @psalm-suppress ArgumentTypeCoercion
+                     * @phpstan-var array<string, mixed> $diffInfo
+                     */
+                    $diffInfo = array_diff_key($info, ['dimension' => 1, 'defaultValueRaw' => 1]);
+                    $info['column'] = $this->fromDbType($info['dbType'], $diffInfo); // @phpstan-ignore argument.type
                 } elseif ($type !== ColumnType::ARRAY) {
-                    /** @psalm-suppress ArgumentTypeCoercion */
-                    $info['column'] = $this->fromType(
-                        $type,
-                        array_diff_key($info, ['dimension' => 1, 'defaultValueRaw' => 1]),
-                    );
+                    /**
+                     * @psalm-suppress ArgumentTypeCoercion
+                     * @phpstan-var array<string, mixed> $diffInfo
+                     */
+                    $diffInfo = array_diff_key($info, ['dimension' => 1, 'defaultValueRaw' => 1]);
+                    $info['column'] = $this->fromType($type, $diffInfo);
                 }
             }
 
@@ -214,7 +233,7 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
         $column = new $columnClass($columnType, ...$columnParams);
 
         if (array_key_exists('defaultValueRaw', $info)) {
-            $column->defaultValue($this->normalizeDefaultValue($info['defaultValueRaw'], $column));
+            $column->defaultValue($this->normalizeDefaultValue($info['defaultValueRaw'], $column)); // @phpstan-ignore argument.type
         }
 
         return $column;
@@ -231,6 +250,7 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
     /**
      * @psalm-param ColumnInfo $info
      * @psalm-return class-string<ColumnInterface>
+     * @phpstan-param array<string, mixed> $info
      */
     protected function getColumnClass(string $type, array $info = []): string
     {
@@ -267,12 +287,13 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
      * Get the abstract database type for a database column type.
      *
      * @param string $dbType The database column type.
-     * @param array $info The column information.
+     * @param array<string, mixed> $info The column information.
      *
      * @return string The abstract database type.
      *
      * @psalm-param ColumnInfo $info
      * @psalm-return ColumnType::*
+     * @phpstan-param array<string, mixed> $info
      */
     protected function getType(string $dbType, array $info = []): string
     {
@@ -284,7 +305,7 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
             return ColumnType::ENUM;
         }
 
-        return static::TYPE_MAP[$dbType] ?? ColumnType::STRING;
+        return static::TYPE_MAP[$dbType] ?? ColumnType::STRING; // @phpstan-ignore return.type
     }
 
     /**
@@ -349,23 +370,28 @@ abstract class AbstractColumnFactory implements ColumnFactoryInterface
     /**
      * Maps a type to a value using a mapping array.
      *
-     * @param array $map The mapping array.
+     * @param array<string, mixed> $map The mapping array.
      * @param string $type The type to map.
-     * @param array $info The column information.
+     * @param array<string, mixed> $info The column information.
      *
      * @return string|null The mapped value or `null` if the type is not corresponding to any value.
      *
      * @psalm-param ColumnInfo $info
      * @psalm-assert ColumnInfo $info
+     * @phpstan-param array<string, mixed> $map
+     * @phpstan-param array<string, mixed> $info
+     * @phpstan-assert array<string, mixed> $info
      */
-    protected function mapType(array $map, string $type, array &$info = []): ?string
+    protected function mapType(array $map, string $type, array &$info = []): ?string // @phpstan-ignore assert.alreadyNarrowedType
     {
         if (!isset($map[$type])) {
             return null;
         }
 
         if (is_callable($map[$type])) {
-            /** @var string|null */
+            /**
+             * @var string|null
+             */
             return $map[$type]($type, $info);
         }
 

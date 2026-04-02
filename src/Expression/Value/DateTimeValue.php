@@ -48,7 +48,7 @@ final class DateTimeValue implements ExpressionInterface
      * - {@see ColumnType::FLOAT}
      * - {@see ColumnType::DOUBLE}
      * - {@see ColumnType::DECIMAL}
-     * @param array $info Additional information about {@see ColumnInterface the column}.
+     * @param array<string, mixed> $info Additional information about {@see ColumnInterface the column}.
      *
      * @psalm-param SupportedColumnType $type
      * @psalm-param ColumnInfo $info
@@ -58,7 +58,7 @@ final class DateTimeValue implements ExpressionInterface
         public readonly string $type = ColumnType::DATETIMETZ,
         public readonly array $info = [],
     ) {
-        if (!isset(self::SUPPORTED_TYPES[$type])) {
+        if (!isset(self::SUPPORTED_TYPES[$type])) { // @phpstan-ignore isset.offset
             throw new InvalidArgumentException("The type '$type' is not supported by DateTimeValue.");
         }
     }

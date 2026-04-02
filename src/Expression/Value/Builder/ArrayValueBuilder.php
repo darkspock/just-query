@@ -24,20 +24,30 @@ use const JSON_THROW_ON_ERROR;
  */
 final class ArrayValueBuilder extends AbstractArrayValueBuilder
 {
+    /**
+     * @param array<int|string, mixed> $params
+     */
     protected function buildStringValue(string $value, ArrayValue $expression, array &$params): string
     {
         $param = new Param($value, DataType::STRING);
 
-        return $this->queryBuilder->bindParam($param, $params);
+        return $this->queryBuilder->bindParam($param, $params); // @phpstan-ignore argument.type
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     protected function buildSubquery(QueryInterface $query, ArrayValue $expression, array &$params): string
     {
-        [$sql, $params] = $this->queryBuilder->build($query, $params);
+        [$sql, $params] = $this->queryBuilder->build($query, $params); // @phpstan-ignore argument.type
 
         return "($sql)";
     }
 
+    /**
+     * @param iterable<int|string, mixed> $value
+     * @param array<int|string, mixed> $params
+     */
     protected function buildValue(iterable $value, ArrayValue $expression, array &$params): string
     {
         if (!is_array($value)) {
@@ -47,6 +57,9 @@ final class ArrayValueBuilder extends AbstractArrayValueBuilder
         return $this->buildStringValue(json_encode($value, JSON_THROW_ON_ERROR), $expression, $params);
     }
 
+    /**
+     * @return array<int|string, mixed>|string
+     */
     protected function getLazyArrayValue(LazyArrayInterface $value): array|string
     {
         return match ($value::class) {

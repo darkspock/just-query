@@ -26,7 +26,7 @@ abstract class AbstractArrayValueBuilder implements ExpressionBuilderInterface
      * The Method builds the raw SQL from the `$expression` that won't be additionally escaped or quoted.
      *
      * @param ArrayValue $expression The expression to build.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The raw SQL that won't be additionally escaped or quoted.
      */
@@ -58,7 +58,7 @@ abstract class AbstractArrayValueBuilder implements ExpressionBuilderInterface
      *
      * @param string $value The valid SQL string representation of the array value.
      * @param ArrayValue $expression The array expression.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The SQL expression representing the array value.
      */
@@ -69,7 +69,7 @@ abstract class AbstractArrayValueBuilder implements ExpressionBuilderInterface
      *
      * @param QueryInterface $query The sub-query object.
      * @param ArrayValue $expression The array expression.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The sub-query SQL expression representing an array.
      */
@@ -82,9 +82,9 @@ abstract class AbstractArrayValueBuilder implements ExpressionBuilderInterface
     /**
      * Builds a SQL expression for an array value.
      *
-     * @param iterable $value The array value.
+     * @param iterable<int|string, mixed> $value The array value.
      * @param ArrayValue $expression The array expression.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The SQL expression representing the array value.
      */
@@ -95,7 +95,7 @@ abstract class AbstractArrayValueBuilder implements ExpressionBuilderInterface
      *
      * @param LazyArrayInterface $value The lazy array value.
      *
-     * @return array|string The value of the lazy array.
+     * @return array<int|string, mixed>|string The value of the lazy array.
      */
     abstract protected function getLazyArrayValue(LazyArrayInterface $value): array|string;
 }

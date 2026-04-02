@@ -13,6 +13,7 @@ final class ArrayColumn extends AbstractArrayColumn
 {
     /**
      * @param string|null $value
+     * @return array<int|string, mixed>|null
      * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function phpTypecast(mixed $value): ?array

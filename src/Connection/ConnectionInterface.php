@@ -64,7 +64,7 @@ interface ConnectionInterface
      * Creates a command for execution.
      *
      * @param string|null $sql The SQL statement to execute.
-     * @param array $params The parameters to bind to the SQL statement.
+     * @param array<int|string, mixed> $params The parameters to bind to the SQL statement.
      *
      * @throws Exception
      * @throws InvalidConfigException

@@ -23,7 +23,7 @@ abstract class AbstractLike implements ConditionInterface
 
     /**
      * @param ExpressionInterface|string $column The column name.
-     * @param ExpressionInterface|int|iterable|string|Stringable|null $value The value to the right of operator.
+     * @param ExpressionInterface|int|iterable<mixed>|string|Stringable|null $value The value to the right of operator.
      * @param bool|null $caseSensitive Whether the comparison is case-sensitive. `null` means using the default
      * behavior.
      * @param bool $escape Whether to escape the value. Defaults to `true`. If `false`, the value will be used as is
@@ -110,6 +110,7 @@ abstract class AbstractLike implements ConditionInterface
     /**
      * Validates the given values to be `string`, `int`, `iterable` or `ExpressionInterface`.
      *
+     * @return iterable<mixed>|int|string|ExpressionInterface|null
      * @throws InvalidArgumentException If the values aren't `string`, `int`, `iterable` or `ExpressionInterface`.
      */
     private static function validateValue(

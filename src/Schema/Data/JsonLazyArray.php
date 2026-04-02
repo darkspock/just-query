@@ -27,6 +27,9 @@ final class JsonLazyArray implements LazyArrayInterface, ArrayAccess, Countable,
 {
     use LazyArrayTrait;
 
+    /**
+     * @var array<int|string, mixed>|string
+     */
     protected array|string $value;
 
     /**
@@ -42,6 +45,7 @@ final class JsonLazyArray implements LazyArrayInterface, ArrayAccess, Countable,
      * Prepares the value to be used as an array or throws an exception if it's impossible.
      *
      * @psalm-assert array $this->value
+     * @phpstan-assert array<int|string, mixed> $this->value
      */
     protected function prepareValue(): void
     {

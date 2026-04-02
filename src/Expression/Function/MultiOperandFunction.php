@@ -17,7 +17,7 @@ use FastPHP\QueryBuilder\Expression\Function\Builder\MultiOperandFunctionBuilder
 abstract class MultiOperandFunction implements ExpressionInterface
 {
     /**
-     * @var array List of operands.
+     * @var array<int, mixed> List of operands.
      */
     protected array $operands = [];
 
@@ -27,7 +27,7 @@ abstract class MultiOperandFunction implements ExpressionInterface
      */
     public function __construct(mixed ...$operands)
     {
-        $this->operands = $operands;
+        $this->operands = $operands; // @phpstan-ignore assign.propertyType
     }
 
     public function add(mixed $operand): static
@@ -37,7 +37,7 @@ abstract class MultiOperandFunction implements ExpressionInterface
     }
 
     /**
-     * @return array List of operands.
+     * @return array<int, mixed> List of operands.
      */
     public function getOperands(): array
     {

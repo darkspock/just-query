@@ -55,7 +55,7 @@ class BigIntColumn extends AbstractColumn
             return null;
         }
 
-        return (string) $value;
+        return (string) $value; // @phpstan-ignore cast.string
     }
 
     protected function dbTypecastString(string $value): int|string|null

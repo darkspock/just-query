@@ -31,7 +31,7 @@ interface DQLQueryBuilderInterface
      *
      * @param QueryInterface $query The {@see Query} object from which the SQL statement will
      * generated.
-     * @param array $params The parameters to bind to the generated SQL statement.
+     * @param array<int|string, mixed> $params The parameters to bind to the generated SQL statement.
      * These parameters will be included in the result, with the more parameters generated during the query building
      * process.
      *
@@ -62,9 +62,9 @@ interface DQLQueryBuilderInterface
     /**
      * Parses the condition specification and generates the corresponding SQL expression.
      *
-     * @param array|ExpressionInterface|string|null $condition The condition specification.
+     * @param array<string, mixed>|ExpressionInterface|string|null $condition The condition specification.
      * Please refer to {@see Query::where()} on how to specify a condition.
-     * @param array $params The binding parameters to populate.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -77,7 +77,7 @@ interface DQLQueryBuilderInterface
      * Builds given $expression.
      *
      * @param ExpressionInterface $expression The expression to build.
-     * @param array $params The parameters to bind to the generated SQL statement.
+     * @param array<int|string, mixed> $params The parameters to bind to the generated SQL statement.
      * These parameters will be included in the result with the more parameters generated during the expression building
      * process.
      *
@@ -107,8 +107,8 @@ interface DQLQueryBuilderInterface
     public function buildFor(array $values): string;
 
     /**
-     * @param array $tables The tables to process.
-     * @param array $params The binding parameters to populate.
+     * @param array<int|string, string|ExpressionInterface> $tables The tables to process.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws NotSupportedException
      *
@@ -119,10 +119,10 @@ interface DQLQueryBuilderInterface
     public function buildFrom(array $tables, array &$params): string;
 
     /**
-     * @param array $columns The columns to group by.
+     * @param array<int, string|ExpressionInterface> $columns The columns to group by.
      * Each column can be a string representing a column name or an array representing a column specification.
      * Please refer to {@see Query::groupBy()} on how to specify this parameter.
-     * @param array $params The binding parameters to populate.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws NotSupportedException
      *
@@ -133,8 +133,8 @@ interface DQLQueryBuilderInterface
     public function buildGroupBy(array $columns, array &$params = []): string;
 
     /**
-     * @param array|ExpressionInterface|string|null $condition The condition specification.
-     * @param array $params The binding parameters to populate.
+     * @param array<string, mixed>|ExpressionInterface|string|null $condition The condition specification.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -146,12 +146,14 @@ interface DQLQueryBuilderInterface
     public function buildHaving(array|ExpressionInterface|string|null $condition, array &$params = []): string;
 
     /**
-     * @param array $joins The joins to process.
-     * @param array $params The binding parameters to populate.
+     * @param array<array-key, array<array-key, mixed>> $joins The joins to process.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws InvalidArgumentException If the `$joins` parameter isn't in proper format.
      * @throws NotSupportedException
      *
+     * @param array<int, mixed> $joins
+     * @param array<int|string, mixed> $params
      * @return string The `JOIN` clause built from {@see Query::join()}.
      *
      * @psalm-param list<Join> $joins
@@ -172,10 +174,10 @@ interface DQLQueryBuilderInterface
     public function buildLimit(ExpressionInterface|int|null $limit, ExpressionInterface|int|null $offset): string;
 
     /**
-     * @param array $columns The columns to order by.
+     * @param array<string, int|ExpressionInterface> $columns The columns to order by.
      * Each column can be a string representing a column name or an array representing a column specification.
      * Please refer to {@see Query::orderBy()} on how to specify this parameter.
-     * @param array $params The binding parameters to populate.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws NotSupportedException
      *
@@ -189,13 +191,13 @@ interface DQLQueryBuilderInterface
      * Builds the ORDER BY and `LIMIT/OFFSET` clauses and appends them to the given SQL.
      *
      * @param string $sql The existing SQL (without `ORDER BY/LIMIT/OFFSET`).
-     * @param array $orderBy The order by columns.
+     * @param array<string, int|ExpressionInterface> $orderBy The order by columns.
      * {@see Query::orderBy()} for more details on how to specify this parameter.
      * @param ExpressionInterface|int|null $limit The limit number.
      * {@see Query::limit()} For more details.
      * @param ExpressionInterface|int|null $offset The offset number.
      * {@see Query::offset()} For more details.
-     * @param array $params The binding parameters to populate.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws NotSupportedException
      *
@@ -212,10 +214,10 @@ interface DQLQueryBuilderInterface
     ): string;
 
     /**
-     * @param array $columns The columns to select.
+     * @param array<int|string, string|ExpressionInterface> $columns The columns to select.
      * Each column can be a string representing a column name or an array representing a column specification.
      * Please refer to {@see Query::select()} on how to specify this parameter.
-     * @param array $params The binding parameters to populate.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      * @param bool $distinct Whether to add `DISTINCT` or not.
      * @param string|null $selectOption The `SELECT` option to use (for example, `SQL_CALC_FOUND_ROWS`).
      *
@@ -234,8 +236,8 @@ interface DQLQueryBuilderInterface
     ): string;
 
     /**
-     * @param array $unions The `UNION` queries to process.
-     * @param array $params The binding parameters to populate.
+     * @param array<int, array{query: string|QueryInterface, all: bool}> $unions The `UNION` queries to process.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -247,9 +249,9 @@ interface DQLQueryBuilderInterface
     public function buildUnion(array $unions, array &$params): string;
 
     /**
-     * @param array|ConditionInterface|ExpressionInterface|string|null $condition The condition built from
+     * @param array<string, mixed>|ConditionInterface|ExpressionInterface|string|null $condition The condition built from
      * {@see Query::where()}.
-     * @param array $params The binding parameters to populate.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -264,8 +266,8 @@ interface DQLQueryBuilderInterface
     ): string;
 
     /**
-     * @param WithQuery[] $withQueries The `WITH` queries to process.
-     * @param array $params The binding parameters to populate.
+     * @param array<int, WithQuery> $withQueries The `WITH` queries to process.
+     * @param array<int|string, mixed> $params The binding parameters to populate.
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -280,7 +282,7 @@ interface DQLQueryBuilderInterface
      * Transforms one condition defined in array format (as described in {@see Query::where()} to
      * instance of {@see ConditionInterface}).
      *
-     * @param array $condition The condition in array format.
+     * @param array<string, mixed> $condition The condition in array format.
      *
      * @throws InvalidArgumentException
      *
@@ -289,9 +291,8 @@ interface DQLQueryBuilderInterface
     public function createConditionFromArray(array $condition): ConditionInterface;
 
     /**
+     * @return ExpressionBuilderInterface<ExpressionInterface> Instance of {@see ExpressionBuilderInterface} for the given expression.
      * @throws NotSupportedException
-     *
-     * @return ExpressionBuilderInterface Instance of {@see ExpressionBuilderInterface} for the given expression.
      */
     public function getExpressionBuilder(ExpressionInterface $expression): ExpressionBuilderInterface;
 
@@ -320,10 +321,11 @@ interface DQLQueryBuilderInterface
     /**
      * Setter for {@see AbstractDQLQueryBuilder::expressionBuilders} property.
      *
-     * @param string[] $builders Array of builders to merge with the pre-defined ones in property.
+     * @param array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface<ExpressionInterface>>> $builders Array of builders to merge with the pre-defined ones in property.
      *
      * @psalm-param array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface>> $builders
      */
+    /** @phpstan-ignore-next-line missingType.generics */
     public function setExpressionBuilders(array $builders): void;
 
     /**

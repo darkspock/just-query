@@ -42,7 +42,7 @@ use FastPHP\QueryBuilder\QueryBuilder\Condition\NotLike;
  */
 final class DQLQueryBuilder extends AbstractDQLQueryBuilder
 {
-    protected function defaultExpressionBuilders(): array
+    protected function defaultExpressionBuilders(): array // @phpstan-ignore missingType.generics
     {
         return [
             ...parent::defaultExpressionBuilders(),

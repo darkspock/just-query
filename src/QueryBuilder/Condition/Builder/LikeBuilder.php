@@ -34,7 +34,7 @@ class LikeBuilder implements ExpressionBuilderInterface
     protected const ESCAPE_SQL = '';
 
     /**
-     * @var array Map of chars to their replacements in `LIKE` conditions. By default, it's configured to escape
+     * @var array<string, string> Map of chars to their replacements in `LIKE` conditions. By default, it's configured to escape
      * `%`, `_` and `\` with `\`.
      */
     protected array $escapingReplacements = [
@@ -51,6 +51,7 @@ class LikeBuilder implements ExpressionBuilderInterface
      * Build SQL for {@see Like} or {@see NotLike}.
      *
      * @param Like|NotLike $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws NotSupportedException
      */
@@ -95,6 +96,8 @@ class LikeBuilder implements ExpressionBuilderInterface
     /**
      * Prepare column to use in SQL.
      *
+     * @param array<int|string, mixed> $params
+     *
      * @throws NotSupportedException
      */
     protected function prepareColumn(Like|NotLike $condition, array &$params): string
@@ -102,6 +105,7 @@ class LikeBuilder implements ExpressionBuilderInterface
         $column = $condition->column;
 
         if ($column instanceof ExpressionInterface) {
+            /** @phpstan-ignore argument.type */
             return $this->queryBuilder->buildExpression($column, $params);
         }
 
@@ -111,6 +115,8 @@ class LikeBuilder implements ExpressionBuilderInterface
     /**
      * Prepare value to use in SQL.
      *
+     * @param array<int|string, mixed> $params
+     *
      * @throws NotSupportedException
      */
     protected function preparePlaceholderName(
@@ -119,6 +125,7 @@ class LikeBuilder implements ExpressionBuilderInterface
         array &$params,
     ): string {
         if ($value instanceof ExpressionInterface) {
+            /** @phpstan-ignore argument.type */
             return $this->queryBuilder->buildExpression($value, $params);
         }
 
@@ -137,6 +144,7 @@ class LikeBuilder implements ExpressionBuilderInterface
             LikeMode::Custom => (string) $value,
         };
 
+        /** @phpstan-ignore argument.type */
         return $this->queryBuilder->bindParam(new Param($value, DataType::STRING), $params);
     }
 

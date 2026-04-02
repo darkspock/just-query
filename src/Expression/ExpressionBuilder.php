@@ -34,7 +34,7 @@ final class ExpressionBuilder implements ExpressionBuilderInterface
      * This method is called by the query builder to build SQL expressions from {@see ExpressionInterface} objects.
      *
      * @param Expression $expression The expression to build.
-     * @param array $params The parameters to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters to be bound to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -70,7 +70,7 @@ final class ExpressionBuilder implements ExpressionBuilderInterface
      * Appends parameters to the list of query parameters replacing non-unique parameters with unique ones.
      *
      * @param array $expressionParams Parameters to be appended.
-     * @param array $params Parameters to be bound to the query.
+     * @param array<int|string, mixed> $params Parameters to be bound to the query.
      *
      * @psalm-param ParamsType $expressionParams
      * @psalm-param ParamsType $params
@@ -117,7 +117,7 @@ final class ExpressionBuilder implements ExpressionBuilderInterface
      * Build expression values of parameters.
      *
      * @param array $expressionParams Parameters from the expression.
-     * @param array $params Parameters to be bound to the query.
+     * @param array<int|string, mixed> $params Parameters to be bound to the query.
      *
      * @psalm-param ParamsType $expressionParams
      * @psalm-param ParamsType $params
@@ -177,7 +177,7 @@ final class ExpressionBuilder implements ExpressionBuilderInterface
      * Returns a unique name for the parameter without colon at the beginning.
      *
      * @param string $name Name of the parameter without colon at the beginning.
-     * @param array $params Parameters to be bound to the query.
+     * @param array<int|string, mixed> $params Parameters to be bound to the query.
      *
      * @psalm-param ParamsType $params
      *

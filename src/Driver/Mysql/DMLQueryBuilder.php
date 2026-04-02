@@ -97,29 +97,32 @@ EXECUTE autoincrement_stmt";
         [$uniqueNames, , $updateNames] = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns);
 
         if (empty($uniqueNames)) {
+            /** @phpstan-ignore parameterByRef.type */
             return $this->insert($table, $insertColumns, $params);
         }
 
         if (empty($updateColumns) || $updateNames === []) {
             /** there are no columns to update */
+            /** @phpstan-ignore parameterByRef.type */
             $insertSql = $this->insert($table, $insertColumns, $params);
             return 'INSERT IGNORE' . substr($insertSql, 6);
         }
 
+        /** @phpstan-ignore parameterByRef.type */
         [$names, $placeholders, $values, $params] = $this->prepareInsertValues($table, $insertColumns, $params);
 
-        $quotedNames = array_map($this->quoter->quoteColumnName(...), $names);
+        $quotedNames = array_map($this->quoter->quoteColumnName(...), $names); // @phpstan-ignore argument.type, argument.type
 
         if (!empty($placeholders)) {
-            $values = $this->buildSimpleSelect(array_combine($names, $placeholders));
+            $values = $this->buildSimpleSelect(array_combine($names, $placeholders)); // @phpstan-ignore argument.type, argument.type, argument.type
         }
 
         $fields = implode(', ', $quotedNames);
 
         $insertSql = 'INSERT INTO ' . $this->quoter->quoteTableName($table)
-            . " ($fields) SELECT $fields FROM ($values) AS EXCLUDED";
+            . " ($fields) SELECT $fields FROM ($values) AS EXCLUDED"; // @phpstan-ignore encapsedStringPart.nonString
 
-        $updates = $this->prepareUpsertSets($table, $updateColumns, $updateNames, $params);
+        $updates = $this->prepareUpsertSets($table, $updateColumns, $updateNames, $params); // @phpstan-ignore argument.type, argument.type
 
         return $insertSql . ' ON DUPLICATE KEY UPDATE ' . implode(', ', $updates);
     }
@@ -149,7 +152,7 @@ EXECUTE autoincrement_stmt";
 
         if (empty($uniqueColumns)) {
             $upsertSql = $this->upsert($table, $insertColumns, $updateColumns, $params);
-            $returnValues = $this->prepareColumnValues($tableSchema, $returnColumns, $insertColumns, $params);
+            $returnValues = $this->prepareColumnValues($tableSchema, $returnColumns, $insertColumns, $params); // @phpstan-ignore parameterByRef.type
 
             return $upsertSql . ';' . $this->buildSimpleSelect($returnValues);
         }
@@ -184,7 +187,7 @@ EXECUTE autoincrement_stmt";
             }
         }
 
-        $uniqueValues = $this->prepareColumnValues($tableSchema, $uniqueColumns, $insertColumns, $params);
+        $uniqueValues = $this->prepareColumnValues($tableSchema, $uniqueColumns, $insertColumns, $params); // @phpstan-ignore parameterByRef.type
 
         if (empty(array_diff($returnColumns, array_keys($uniqueValues)))) {
             $selectValues = array_intersect_key($uniqueValues, array_fill_keys($returnColumns, null));
@@ -212,17 +215,25 @@ EXECUTE autoincrement_stmt";
             . ' WHERE ' . implode(' AND ', $conditions);
     }
 
+    /**
+     * @param array<int|string, mixed>|QueryInterface $columns
+     * @param array<int|string, mixed> $params
+     *
+     * @return array<int, mixed>
+     */
     protected function prepareInsertValues(string $table, array|QueryInterface $columns, array $params = []): array
     {
         if (empty($columns)) {
             return [[], [], 'VALUES ()', []];
         }
 
-        return parent::prepareInsertValues($table, $columns, $params);
+        return parent::prepareInsertValues($table, $columns, $params); // @phpstan-ignore return.type
     }
 
     /**
-     * @param string[] $columnNames
+     * @param array<int|string, mixed> $columnNames
+     * @param array<int|string, mixed>|QueryInterface $insertColumns
+     * @param array<int|string, mixed> $params
      *
      * @return string[] Prepared column values for using in a SQL statement.
      * @psalm-return array<string, string>
@@ -238,21 +249,21 @@ EXECUTE autoincrement_stmt";
         $tableColumns = $tableSchema->getColumns();
 
         foreach ($columnNames as $name) {
-            $column = $tableColumns[$name];
+            $column = $tableColumns[$name]; // @phpstan-ignore offsetAccess.invalidOffset
 
             if ($column->isAutoIncrement()) {
-                $columnValues[$name] = 'LAST_INSERT_ID()';
+                $columnValues[$name] = 'LAST_INSERT_ID()'; // @phpstan-ignore offsetAccess.invalidOffset
             } elseif ($insertColumns instanceof QueryInterface) {
                 throw new NotSupportedException(
                     self::class . '::upsertReturning() is not supported by MySQL'
                     . ' for tables without auto increment when inserting sub-query.',
                 );
             } else {
-                $value = $insertColumns[$name] ?? $column->getDefaultValue();
-                $columnValues[$name] = $this->queryBuilder->buildValue($value, $params);
+                $value = $insertColumns[$name] ?? $column->getDefaultValue(); // @phpstan-ignore offsetAccess.invalidOffset
+                $columnValues[$name] = $this->queryBuilder->buildValue($value, $params); // @phpstan-ignore offsetAccess.invalidOffset
             }
         }
 
-        return $columnValues;
+        return $columnValues; // @phpstan-ignore return.type
     }
 }

@@ -59,7 +59,7 @@ use function get_object_vars;
  * END
  * ```
  */
-final class CaseX implements ExpressionInterface
+final class CaseX implements ExpressionInterface // @phpstan-ignore property.uninitializedReadonly
 {
     /**
      * @var WhenThen[] List of `WHEN-THEN` conditions and their corresponding results in the `CASE` expression.
@@ -71,7 +71,7 @@ final class CaseX implements ExpressionInterface
      *
      * @psalm-suppress PropertyNotSetInConstructor
      */
-    public readonly mixed $else;
+    public readonly mixed $else; // @phpstan-ignore property.uninitializedReadonly
 
     /**
      * @param mixed $value Comparison condition in the `CASE` expression:
@@ -98,7 +98,7 @@ final class CaseX implements ExpressionInterface
             } elseif ($this->hasElse()) {
                 throw new InvalidArgumentException('`CASE` expression can have only one `ELSE` value.');
             } else {
-                $this->else = $arg;
+                $this->else = $arg; // @phpstan-ignore assign.readOnlyProperty
             }
         }
 

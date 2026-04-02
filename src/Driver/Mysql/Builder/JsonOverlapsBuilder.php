@@ -46,6 +46,7 @@ final class JsonOverlapsBuilder implements ExpressionBuilderInterface
             $values = new JsonValue($values);
         }
 
+        /** @phpstan-ignore argument.type */
         $values = $this->queryBuilder->buildExpression($values, $params);
 
         return "JSON_OVERLAPS($column, $values)";

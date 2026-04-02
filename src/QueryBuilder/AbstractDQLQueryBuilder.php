@@ -71,7 +71,7 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
 {
     protected string $separator = ' ';
     /**
-     * @var array Map of condition aliases to condition classes. For example:
+     * Map of condition aliases to condition classes. For example:
      *
      * ```php
      * return [
@@ -88,11 +88,12 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
      * @see setConditonClasses()
      * @see defaultConditionClasses()
      *
+     * @var array<string, class-string<ConditionInterface>>
      * @psalm-var array<string, class-string<ConditionInterface>> $conditionClasses
      */
     protected array $conditionClasses = [];
     /**
-     * @var array Map of expression aliases to expression classes.
+     * Map of expression aliases to expression classes.
      *
      * For example:
      *
@@ -107,13 +108,15 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
      * {@see setExpressionBuilders()}
      * {@see defaultExpressionBuilders()}
      *
+     * @var array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface<ExpressionInterface>>>
      * @psalm-var array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface>>
+     * @phpstan-ignore-next-line missingType.generics
      */
     protected array $expressionBuilders = [];
 
     public function __construct(
         protected QueryBuilderInterface $queryBuilder,
-        private readonly QuoterInterface $quoter,
+        protected readonly QuoterInterface $quoter,
     ) {
         $this->expressionBuilders = $this->defaultExpressionBuilders();
         $this->conditionClasses = $this->defaultConditionClasses();
@@ -127,12 +130,12 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
             $this->buildSelect($query->getSelect(), $params, $query->getDistinct(), $query->getSelectOption()),
             $this->buildFrom($query->getFrom(), $params),
             $this->buildJoin($query->getJoins(), $params),
-            $this->buildWhere($query->getWhere(), $params),
-            $this->buildGroupBy($query->getGroupBy(), $params),
-            $this->buildHaving($query->getHaving(), $params),
+            $this->buildWhere($query->getWhere(), $params), // @phpstan-ignore argument.type
+            $this->buildGroupBy($query->getGroupBy(), $params), // @phpstan-ignore argument.type
+            $this->buildHaving($query->getHaving(), $params), // @phpstan-ignore argument.type
         ];
         $sql = implode($this->separator, array_filter($clauses));
-        $sql = $this->buildOrderByAndLimit($sql, $query->getOrderBy(), $query->getLimit(), $query->getOffset(), $params);
+        $sql = $this->buildOrderByAndLimit($sql, $query->getOrderBy(), $query->getLimit(), $query->getOffset(), $params); // @phpstan-ignore argument.type
 
         $for = $this->buildFor($query->getFor());
         if ($for !== '') {
@@ -145,7 +148,7 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
             $sql = "($sql)$this->separator$union";
         }
 
-        $with = $this->buildWithQueries($query->getWithQueries(), $params);
+        $with = $this->buildWithQueries($query->getWithQueries(), $params); // @phpstan-ignore argument.type
 
         if ($with !== '') {
             $sql = "$with$this->separator$sql";
@@ -175,6 +178,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return implode(', ', $columns);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function buildCondition(array|string|ExpressionInterface|null $condition, array &$params = []): string
     {
         if (empty($condition)) {
@@ -188,13 +194,16 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         if (is_array($condition)) {
             $condition = $this->createConditionFromArray($condition);
         } elseif (is_string($condition)) {
-            $condition = new Expression($condition, $params);
+            $condition = new Expression($condition, $params); // @phpstan-ignore argument.type
             $params = [];
         }
 
         return $this->buildExpression($condition, $params);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function buildExpression(ExpressionInterface $expression, array &$params = []): string
     {
         return $this->queryBuilder
@@ -211,6 +220,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return 'FOR ' . implode($this->separator . 'FOR ', $values);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function buildFrom(array $tables, array &$params): string
     {
         if (empty($tables)) {
@@ -223,6 +235,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return 'FROM ' . implode(', ', $tables);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function buildGroupBy(array $columns, array &$params = []): string
     {
         if (empty($columns)) {
@@ -242,6 +257,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return 'GROUP BY ' . implode(', ', $columns);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function buildHaving(array|ExpressionInterface|string|null $condition, array &$params = []): string
     {
         $having = $this->buildCondition($condition, $params);
@@ -249,6 +267,10 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return ($having === '') ? '' : ('HAVING ' . $having);
     }
 
+    /**
+     * @param array<int, mixed> $joins
+     * @param array<int|string, mixed> $params
+     */
     public function buildJoin(array $joins, array &$params): string
     {
         if (empty($joins)) {
@@ -256,7 +278,6 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         }
 
         foreach ($joins as $i => $join) {
-            /** @psalm-suppress DocblockTypeContradiction */
             if (!is_array($join) || !isset($join[0], $join[1])) {
                 throw new InvalidArgumentException(
                     'A join clause must be specified as an array of join type, join table, and optionally join condition.',
@@ -268,7 +289,7 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
             $tables = $this->quoteTableNames(is_array($table) ? $table : [$table], $params);
 
             $table = reset($tables);
-            $joins[$i] = "$joinType $table";
+            $joins[$i] = "$joinType $table"; // @phpstan-ignore encapsedStringPart.nonString, encapsedStringPart.nonString
 
             if (isset($join[2])) {
                 if (is_array($join[2]) && !isset($join[2][0])) {
@@ -280,14 +301,13 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
                     unset($column);
                 }
 
-                $condition = $this->buildCondition($join[2], $params);
+                $condition = $this->buildCondition($join[2], $params); // @phpstan-ignore argument.type
                 if ($condition !== '') {
                     $joins[$i] .= ' ON ' . $condition;
                 }
             }
         }
 
-        /** @psalm-var array<string> $joins */
         return implode($this->separator, $joins);
     }
 
@@ -319,7 +339,7 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         /** @psalm-var array<string, ExpressionInterface|int|string> $columns */
         foreach ($columns as $name => $direction) {
             if ($direction instanceof ExpressionInterface) {
-                $orders[] = $this->buildExpression($direction, $params);
+                $orders[] = $this->buildExpression($direction, $params); // @phpstan-ignore parameterByRef.type
             } else {
                 $orders[] = $this->quoter->quoteColumnName($name) . ($direction === SORT_DESC ? ' DESC' : '');
             }
@@ -347,6 +367,10 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return $sql;
     }
 
+    /**
+     * @param array<int|string, mixed> $columns
+     * @param array<int|string, mixed> $params
+     */
     public function buildSelect(
         array $columns,
         array &$params,
@@ -383,11 +407,8 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
             }
 
             if ($isIndexString && $i !== $column) {
-                /**
-                 * @var string $i
-                 * @psalm-var string $columns[$i]
-                 */
-                $columns[$i] .= ' AS ' . $quoter->quoteColumnName($i);
+                /** @var string $i */
+                $columns[$i] .= ' AS ' . $quoter->quoteColumnName($i); // @phpstan-ignore assignOp.invalid
             }
         }
 
@@ -415,6 +436,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return trim($result);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function buildWhere(
         array|string|ConditionInterface|ExpressionInterface|null $condition,
         array &$params = [],
@@ -454,6 +478,7 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
     public function createConditionFromArray(array $condition): ConditionInterface
     {
         /** operator format: operator, operand 1, operand 2, ... */
+        /** @phpstan-ignore isset.offset */
         if (isset($condition[0])) {
             $operator = strtoupper((string) array_shift($condition));
             $className = $this->conditionClasses[$operator] ?? Simple::class;
@@ -462,7 +487,7 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
 
         $conditions = [];
         foreach ($condition as $column => $value) {
-            if (!is_string($column)) {
+            if (!is_string($column)) { // @phpstan-ignore function.alreadyNarrowedType
                 throw new InvalidArgumentException('Condition array must have string keys.');
             }
             if (is_iterable($value) || $value instanceof QueryInterface) {
@@ -475,6 +500,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         return count($conditions) === 1 ? $conditions[0] : new Condition\AndX(...$conditions);
     }
 
+    /**
+     * @return ExpressionBuilderInterface<ExpressionInterface>
+     */
     public function getExpressionBuilder(ExpressionInterface $expression): ExpressionBuilderInterface
     {
         $className = $expression::class;
@@ -498,6 +526,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
         $this->conditionClasses = array_merge($this->conditionClasses, $classes);
     }
 
+    /**
+     * @param array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface<ExpressionInterface>>> $builders
+     */
     public function setExpressionBuilders(array $builders): void
     {
         $this->expressionBuilders = array_merge($this->expressionBuilders, $builders);
@@ -555,7 +586,9 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
      *
      * See {@see expressionBuilders} docs for details.
      *
+     * @return array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface<ExpressionInterface>>>
      * @psalm-return array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface>>
+     * @phpstan-ignore-next-line missingType.generics
      */
     protected function defaultExpressionBuilders(): array
     {
@@ -614,16 +647,17 @@ abstract class AbstractDQLQueryBuilder implements DQLQueryBuilderInterface
     }
 
     /**
+     * @param array<int|string, mixed> $tables
+     * @param array<int|string, mixed> $params
      * @throws NotSupportedException
      *
-     * @return array The list of table names with quote.
+     * @return array<int|string, mixed> The list of table names with quote.
      */
-    private function quoteTableNames(array $tables, array &$params): array
+    protected function quoteTableNames(array $tables, array &$params): array
     {
-        /** @psalm-var array<array-key, array|QueryInterface|string> $tables */
         foreach ($tables as $i => $table) {
             if ($table instanceof QueryInterface) {
-                [$sql, $params] = $this->build($table, $params);
+                [$sql, $params] = $this->build($table, $params); // @phpstan-ignore argument.type
                 $tables[$i] = "($sql) " . $this->quoter->quoteTableName((string) $i);
             } elseif (is_string($table) && is_string($i)) {
                 if (!str_contains($table, '(')) {

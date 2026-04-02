@@ -45,6 +45,6 @@ abstract class AbstractRangeValueBuilder implements ExpressionBuilderInterface
             return '';
         }
 
-        return (string) $value;
+        return (string) $value; // @phpstan-ignore cast.string
     }
 }

@@ -72,7 +72,7 @@ abstract class AbstractArrayColumn extends AbstractColumn
     }
 
     /**
-     * @param iterable|LazyArrayInterface|QueryInterface|string|null $value
+     * @param iterable<int|string, mixed>|LazyArrayInterface|QueryInterface|string|null $value
      */
     public function dbTypecast(mixed $value): ?ExpressionInterface
     {

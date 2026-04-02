@@ -65,6 +65,7 @@ use function stream_get_contents;
  *
  * To build `SELECT` SQL statements, please use {@see QueryInterface} and its implementations instead.
  *
+ * @psalm-import-type ParamsType from ConnectionInterface
  * @psalm-import-type BatchValues from DMLQueryBuilderInterface
  */
 abstract class AbstractCommand implements CommandInterface
@@ -108,7 +109,7 @@ abstract class AbstractCommand implements CommandInterface
     protected const QUERY_MODE_SCALAR = 32;
 
     /**
-     * @var Param[] Parameters to use.
+     * @var array<string, Param> Parameters to use.
      */
     protected array $params = [];
 
@@ -200,6 +201,9 @@ abstract class AbstractCommand implements CommandInterface
         return $this->setSql($sql)->requireTableSchemaRefresh($table);
     }
 
+    /**
+     * @param array<int, string> $columns
+     */
     public function insertBatch(string $table, iterable $rows, array $columns = []): static
     {
         $table = $this->getQueryBuilder()->getQuoter()->getRawTableName($table);
@@ -208,6 +212,7 @@ abstract class AbstractCommand implements CommandInterface
         $sql = $this->getQueryBuilder()->insertBatch($table, $rows, $columns, $params);
 
         $this->setRawSql($sql);
+        /** @phpstan-ignore argument.type */
         $this->bindValues($params);
 
         return $this;
@@ -246,9 +251,15 @@ abstract class AbstractCommand implements CommandInterface
         return $this->setSql($sql)->requireTableSchemaRefresh($viewName);
     }
 
+    /**
+     * @param array<string, mixed>|string $condition
+     *
+     * @psalm-param ParamsType $params
+     */
     public function delete(string $table, array|string $condition = '', array $params = []): static
     {
         $sql = $this->getQueryBuilder()->delete($table, $condition, $params);
+        /** @phpstan-ignore argument.type */
         return $this->setSql($sql)->bindValues($params);
     }
 
@@ -318,12 +329,17 @@ abstract class AbstractCommand implements CommandInterface
         return $this->setSql($sql)->requireTableSchemaRefresh($viewName);
     }
 
+    /**
+     * @return array<string, mixed>|array<string, Param>
+     */
     public function getParams(bool $asValues = true): array
     {
         if (!$asValues) {
+            /** @var array<string, Param> */
             return $this->params;
         }
 
+        /** @var array<string, mixed> $buildParams */
         $buildParams = [];
 
         foreach ($this->params as $name => $value) {
@@ -340,10 +356,13 @@ abstract class AbstractCommand implements CommandInterface
         }
 
         $queryBuilder = $this->getQueryBuilder();
+        /** @var array<int|string, string> $params */
         $params = array_map($queryBuilder->prepareParam(...), $this->params);
 
         if (!isset($params[0])) {
-            return $queryBuilder->replacePlaceholders($this->sql, $params);
+            /** @var array<string, string> $namedParams */
+            $namedParams = $params;
+            return $queryBuilder->replacePlaceholders($this->sql, $namedParams);
         }
 
         // Support unnamed placeholders should be dropped
@@ -365,6 +384,7 @@ abstract class AbstractCommand implements CommandInterface
     {
         $params = [];
         $sql = $this->getQueryBuilder()->insert($table, $columns, $params);
+        /** @phpstan-ignore argument.type */
         return $this->setSql($sql)->bindValues($params);
     }
 
@@ -378,6 +398,7 @@ abstract class AbstractCommand implements CommandInterface
         $params = [];
         $sql = $this->getQueryBuilder()->insertReturningPks($table, $columns, $params);
 
+        /** @phpstan-ignore argument.type */
         $this->setSql($sql)->bindValues($params);
 
         /** @psalm-var array<string, mixed> */
@@ -411,8 +432,12 @@ abstract class AbstractCommand implements CommandInterface
         return $results ?? [];
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     public function queryColumn(): array
     {
+        /** @var array<int, mixed>|null $results */
         $results = $this->queryInternal(self::QUERY_MODE_COLUMN);
         return is_array($results) ? $results : [];
     }
@@ -484,6 +509,11 @@ abstract class AbstractCommand implements CommandInterface
         return $this->setSql($sql);
     }
 
+    /**
+     * @param array<string, mixed> $columns
+     *
+     * @psalm-param ParamsType $params
+     */
     public function update(
         string $table,
         array $columns,
@@ -492,9 +522,13 @@ abstract class AbstractCommand implements CommandInterface
         array $params = [],
     ): static {
         $sql = $this->getQueryBuilder()->update($table, $columns, $condition, $from, $params);
+        /** @phpstan-ignore argument.type */
         return $this->setSql($sql)->bindValues($params);
     }
 
+    /**
+     * @param array<string, mixed>|bool $updateColumns
+     */
     public function upsert(
         string $table,
         array|QueryInterface $insertColumns,
@@ -502,9 +536,14 @@ abstract class AbstractCommand implements CommandInterface
     ): static {
         $params = [];
         $sql = $this->getQueryBuilder()->upsert($table, $insertColumns, $updateColumns, $params);
+        /** @phpstan-ignore argument.type */
         return $this->setSql($sql)->bindValues($params);
     }
 
+    /**
+     * @param array<string, mixed>|bool $updateColumns
+     * @param array<int, string>|null $returnColumns
+     */
     public function upsertReturning(
         string $table,
         array|QueryInterface $insertColumns,
@@ -520,17 +559,22 @@ abstract class AbstractCommand implements CommandInterface
         $sql = $this->getQueryBuilder()
             ->upsertReturning($table, $insertColumns, $updateColumns, $returnColumns, $params);
 
+        /** @phpstan-ignore argument.type */
         $this->setSql($sql)->bindValues($params);
 
         /** @psalm-var array<string, mixed> */
         return $this->queryInternal(self::QUERY_MODE_ROW | self::QUERY_MODE_EXECUTE);
     }
 
+    /**
+     * @param array<string, mixed>|bool $updateColumns
+     */
     public function upsertReturningPks(
         string $table,
         array|QueryInterface $insertColumns,
         array|bool $updateColumns = true,
     ): array {
+        /** @var array<int, string> $primaryKeys */
         $primaryKeys = $this->db->getSchema()->getTableSchema($table)?->getPrimaryKey() ?? [];
         return $this->upsertReturning($table, $insertColumns, $updateColumns, $primaryKeys);
     }

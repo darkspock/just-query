@@ -20,11 +20,11 @@ final class ArrayParser
      *
      * @param string $value String to parse.
      *
-     * @return (array|string|null)[]|null Parsed value.
+     * @return array<int, mixed>|null Parsed value.
      *
      * @psalm-return list<array|string|null>|null
      */
-    public function parse(string $value): ?array
+    public function parse(string $value): ?array // @phpstan-ignore missingType.iterableValue
     {
         return $value[0] === '{'
             ? $this->parseArray($value)
@@ -37,11 +37,11 @@ final class ArrayParser
      * @param string $value String to parse.
      * @param int $i parse starting position.
      *
-     * @return (array|string|null)[] Parsed value.
+     * @return array<int, mixed> Parsed value.
      *
      * @psalm-return list<array|string|null>
      */
-    private function parseArray(string $value, int &$i = 0): array
+    private function parseArray(string $value, int &$i = 0): array // @phpstan-ignore missingType.iterableValue
     {
         if ($value[++$i] === '}') {
             ++$i;
@@ -69,9 +69,9 @@ final class ArrayParser
     private function parseQuotedString(string $value, int &$i): string
     {
         preg_match('/(?>[^"\\\\]+|\\\\.)*/', $value, $matches, 0, $i + 1);
-        $i += strlen($matches[0]) + 2;
+        $i += strlen($matches[0]) + 2; // @phpstan-ignore offsetAccess.notFound
 
-        return stripslashes($matches[0]);
+        return stripslashes($matches[0]); // @phpstan-ignore offsetAccess.notFound
     }
 
     /**

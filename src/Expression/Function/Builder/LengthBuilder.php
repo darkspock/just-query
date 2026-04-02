@@ -24,7 +24,7 @@ final class LengthBuilder implements ExpressionBuilderInterface
      * Builds a SQL `LENGTH()` function expression from the given {@see Length} object.
      *
      * @param Length $expression The expression to build.
-     * @param array $params The parameters to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters to be bound to the query.
      *
      * @return string The SQL `LENGTH()` function expression.
      */
@@ -36,7 +36,7 @@ final class LengthBuilder implements ExpressionBuilderInterface
     /**
      * Builds an operand expression.
      */
-    private function buildOperand(mixed $operand, array &$params): string
+    private function buildOperand(mixed $operand, array &$params): string // @phpstan-ignore missingType.iterableValue
     {
         if (is_string($operand)) {
             return $this->queryBuilder->getQuoter()->quoteColumnName($operand);

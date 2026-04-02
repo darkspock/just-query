@@ -27,7 +27,7 @@ use FastPHP\QueryBuilder\Schema\Data\LazyArrayInterface;
 final class ArrayValue implements ExpressionInterface
 {
     /**
-     * @param iterable|LazyArrayInterface|QueryInterface|string|null $value The array value which can be represented as
+     * @param iterable<int|string, mixed>|LazyArrayInterface|QueryInterface|string|null $value The array value which can be represented as
      * - an `array` of values;
      * - an instance of {@see Traversable} or {@see LazyArrayInterface} that represents an array of values;
      * - an instance of {@see QueryInterface} that represents an SQL sub-query;

@@ -25,7 +25,7 @@ final class LongestBuilder extends MultiOperandFunctionBuilder
      * Builds a SQL expression to represent the function which returns the longest string.
      *
      * @param Longest $expression The expression to build.
-     * @param array $params The parameters to bind.
+     * @param array<int|string, mixed> $params The parameters to bind.
      *
      * @return string The SQL expression.
      */

@@ -95,12 +95,12 @@ final class JsonSchemaReader
 
         /** @var array<string, array<string, array<string, mixed>>> $data */
         $data = json_decode($content, true);
-        if (!is_array($data)) {
+        if (!is_array($data)) { // @phpstan-ignore function.alreadyNarrowedType
             return;
         }
 
         foreach ($data as $tableName => $columns) {
-            if (!is_array($columns)) {
+            if (!is_array($columns)) { // @phpstan-ignore function.alreadyNarrowedType
                 continue;
             }
             $this->tables[$tableName] = $this->buildTableSchema($tableName, $columns);
@@ -128,7 +128,7 @@ final class JsonSchemaReader
      */
     private function buildColumn(array $def): ColumnInterface
     {
-        $type = (string) ($def['type'] ?? 'string');
+        $type = (string) ($def['type'] ?? 'string'); // @phpstan-ignore cast.string
 
         $column = match ($type) {
             'integer' => new IntegerColumn(),
@@ -151,10 +151,10 @@ final class JsonSchemaReader
             $column->notNull();
         }
         if (isset($def['size'])) {
-            $column->size((int) $def['size']);
+            $column->size((int) $def['size']); // @phpstan-ignore cast.int
         }
         if (isset($def['scale'])) {
-            $column->scale((int) $def['scale']);
+            $column->scale((int) $def['scale']); // @phpstan-ignore cast.int
         }
         if (array_key_exists('defaultValue', $def)) {
             $column->defaultValue($def['defaultValue']);

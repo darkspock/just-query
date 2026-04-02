@@ -18,9 +18,9 @@ use function is_string;
 abstract class AbstractIn implements ConditionInterface
 {
     /**
-     * @param ExpressionInterface|iterable|string $column The column name. If it's an array, a composite
+     * @param ExpressionInterface|iterable<mixed>|string $column The column name. If it's an array, a composite
      * condition will be generated.
-     * @param iterable|QueryInterface $values An array of values that {@see $columns} value should be among.
+     * @param iterable<mixed>|QueryInterface $values An array of values that {@see $columns} value should be among.
      * If it's an empty array, the generated expression will be a `false` value if {@see $operator} is `IN` and empty if
      * operator is `NOT IN`.
      *
@@ -85,6 +85,7 @@ abstract class AbstractIn implements ConditionInterface
     /**
      * Validates the given values to be `iterable` or `QueryInterface`.
      *
+     * @return iterable<mixed>|QueryInterface
      * @throws InvalidArgumentException If the values aren't an `iterable` or `QueryInterface`.
      */
     private static function validateValues(string $operator, mixed $values): iterable|QueryInterface

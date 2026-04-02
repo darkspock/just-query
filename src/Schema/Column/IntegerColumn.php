@@ -33,7 +33,7 @@ class IntegerColumn extends AbstractColumn
                 $value instanceof ExpressionInterface => $value,
                 $value instanceof BackedEnum => $value->value === '' ? null : (int) $value->value,
                 $value instanceof DateTimeInterface => $value->getTimestamp(),
-                $value instanceof Stringable => ($val = (string) $value) === '' ? null : (int) $val,
+                $value instanceof Stringable => ($val = (string) $value) === '' ? null : (int) $val, // @phpstan-ignore cast.int
                 default => $this->throwWrongTypeException($value::class),
             },
             default => $this->throwWrongTypeException(gettype($value)),
@@ -46,6 +46,6 @@ class IntegerColumn extends AbstractColumn
             return null;
         }
 
-        return (int) $value;
+        return (int) $value; // @phpstan-ignore cast.int
     }
 }

@@ -41,6 +41,7 @@ use FastPHP\QueryBuilder\Constraint\ForeignKey;
  *     unsigned?: bool,
  *     values?: array|null,
  * }
+ * @phpstan-type ColumnInfo array<string, mixed>
  */
 interface ColumnFactoryInterface
 {
@@ -48,9 +49,10 @@ interface ColumnFactoryInterface
      * Creates an instance of {@see ColumnInterface} for a database column type and initializes column information.
      *
      * @param string $dbType The database column type.
-     * @param array $info The column information. The set of parameters may be different for a specific DBMS.
+     * @param array<string, mixed> $info The column information. The set of parameters may be different for a specific DBMS.
      *
      * @psalm-param ColumnInfo $info
+     * @phpstan-param array<string, mixed> $info
      */
     public function fromDbType(string $dbType, array $info = []): ColumnInterface;
 
@@ -62,9 +64,10 @@ interface ColumnFactoryInterface
      * For example, `varchar(255) NOT NULL` is `varchar` database type with `255` size and a `NOT NULL` constraint.
      *
      * @param string $definition The database column definition.
-     * @param array $info The column information. The set of parameters may be different for a specific DBMS.
+     * @param array<string, mixed> $info The column information. The set of parameters may be different for a specific DBMS.
      *
      * @psalm-param ColumnInfo $info
+     * @phpstan-param array<string, mixed> $info
      */
     public function fromDefinition(string $definition, array $info = []): ColumnInterface;
 
@@ -72,9 +75,10 @@ interface ColumnFactoryInterface
      * Creates an instance of {@see ColumnInterface} for a pseudo-type and initializes column information.
      *
      * @param string $pseudoType The pseudo-type.
-     * @param array $info The column information. The set of parameters may be different for a specific DBMS.
+     * @param array<string, mixed> $info The column information. The set of parameters may be different for a specific DBMS.
      *
      * @psalm-param ColumnInfo $info
+     * @phpstan-param array<string, mixed> $info
      */
     public function fromPseudoType(string $pseudoType, array $info = []): ColumnInterface;
 
@@ -82,9 +86,10 @@ interface ColumnFactoryInterface
      * Creates an instance of {@see ColumnInterface} for an abstract database type and initializes column information.
      *
      * @param string $type The abstract database type.
-     * @param array $info The column information. The set of parameters may be different for a specific DBMS.
+     * @param array<string, mixed> $info The column information. The set of parameters may be different for a specific DBMS.
      *
      * @psalm-param ColumnInfo $info
+     * @phpstan-param array<string, mixed> $info
      */
     public function fromType(string $type, array $info = []): ColumnInterface;
 }

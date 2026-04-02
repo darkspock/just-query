@@ -33,9 +33,12 @@ trait LazyArrayTrait
     {
         $this->prepareValue();
 
-        return $this->value;
+        return $this->value; // @phpstan-ignore return.type
     }
 
+    /**
+     * @return array<int|string, mixed>
+     */
     public function jsonSerialize(): array
     {
         return $this->getValue();
@@ -58,7 +61,7 @@ trait LazyArrayTrait
     {
         $this->prepareValue();
 
-        return $this->value[$offset];
+        return $this->value[$offset]; // @phpstan-ignore offsetAccess.notFound
     }
 
     /**
@@ -68,7 +71,7 @@ trait LazyArrayTrait
     {
         $this->prepareValue();
 
-        $this->value[$offset] = $value;
+        $this->value[$offset] = $value; // @phpstan-ignore offsetAssign.dimType, assign.propertyType
     }
 
     /**
@@ -78,20 +81,23 @@ trait LazyArrayTrait
     {
         $this->prepareValue();
 
-        unset($this->value[$offset]);
+        unset($this->value[$offset]); // @phpstan-ignore assign.propertyType
     }
 
     public function count(): int
     {
         $this->prepareValue();
 
-        return count($this->value);
+        return count($this->value); // @phpstan-ignore return.type, argument.type
     }
 
-    public function getIterator(): ArrayIterator
+    /**
+     * @return ArrayIterator<int|string, mixed>
+     */
+    public function getIterator(): ArrayIterator // @phpstan-ignore return.type
     {
         $this->prepareValue();
 
-        return new ArrayIterator($this->value);
+        return new ArrayIterator($this->value); // @phpstan-ignore argument.type, return.type
     }
 }

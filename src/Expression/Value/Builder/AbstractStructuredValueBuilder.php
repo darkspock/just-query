@@ -30,7 +30,7 @@ abstract class AbstractStructuredValueBuilder implements ExpressionBuilderInterf
      * The method builds the raw SQL from the `$expression` that won't be additionally escaped or quoted.
      *
      * @param StructuredValue $expression The expression to build.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The raw SQL that won't be additionally escaped or quoted.
      */
@@ -62,7 +62,7 @@ abstract class AbstractStructuredValueBuilder implements ExpressionBuilderInterf
      *
      * @param string $value The valid SQL string representation of the structured value.
      * @param StructuredValue $expression The structured expression.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The SQL expression representing the structured value.
      */
@@ -77,7 +77,7 @@ abstract class AbstractStructuredValueBuilder implements ExpressionBuilderInterf
      *
      * @param QueryInterface $query The sub-query object.
      * @param StructuredValue $expression The structured expression.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The sub-query SQL expression representing a structured value.
      */
@@ -90,9 +90,9 @@ abstract class AbstractStructuredValueBuilder implements ExpressionBuilderInterf
     /**
      * Builds an SQL expression for a structured value.
      *
-     * @param array|object $value The structured value.
+     * @param array<string, mixed>|object $value The structured value.
      * @param StructuredValue $expression The structured expression.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The SQL expression representing the structured value.
      */
@@ -107,7 +107,7 @@ abstract class AbstractStructuredValueBuilder implements ExpressionBuilderInterf
      *
      * @param LazyArrayInterface $value The lazy array value.
      *
-     * @return array|string The value of the lazy array.
+     * @return array<string, mixed>|string The value of the lazy array.
      */
     abstract protected function getLazyArrayValue(LazyArrayInterface $value): array|string;
 
@@ -121,8 +121,9 @@ abstract class AbstractStructuredValueBuilder implements ExpressionBuilderInterf
      *
      * If the structured type columns are not specified it will only convert the object to an array.
      *
-     * @param array|object $value The structured type value.
+     * @param array<string, mixed>|object $value The structured type value.
      * @param StructuredValue $expression The structured expression.
+     * @return array<string, mixed>
      */
     protected function prepareValues(array|object $value, StructuredValue $expression): array
     {
@@ -132,7 +133,7 @@ abstract class AbstractStructuredValueBuilder implements ExpressionBuilderInterf
         $columns = $type instanceof AbstractStructuredColumn ? $type->getColumns() : [];
 
         if (empty($columns)) {
-            return $value;
+            return $value; // @phpstan-ignore return.type
         }
 
         $prepared = [];

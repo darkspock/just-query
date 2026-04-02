@@ -62,6 +62,9 @@ final class ColumnFactory extends AbstractColumnFactory
         return new ColumnDefinitionParser();
     }
 
+    /**
+     * @param array<string, mixed> $info
+     */
     protected function getColumnClass(string $type, array $info = []): string
     {
         return match ($type) {
@@ -80,6 +83,9 @@ final class ColumnFactory extends AbstractColumnFactory
         };
     }
 
+    /**
+     * @param array<string, mixed> $info
+     */
     protected function getType(string $dbType, array $info = []): string
     {
         if ($dbType === 'bit' && isset($info['size']) && $info['size'] === 1) {

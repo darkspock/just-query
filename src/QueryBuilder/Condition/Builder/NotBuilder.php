@@ -41,6 +41,7 @@ class NotBuilder implements ExpressionBuilderInterface
      * Build SQL for {@see Not}.
      *
      * @param Not $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -48,7 +49,7 @@ class NotBuilder implements ExpressionBuilderInterface
     public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $condition = is_array($expression->condition)
-            ? $this->queryBuilder->createConditionFromArray($expression->condition)
+            ? $this->queryBuilder->createConditionFromArray($expression->condition) // @phpstan-ignore argument.type
             : $expression->condition;
 
         if ($condition === null || $condition === '') {
@@ -58,14 +59,17 @@ class NotBuilder implements ExpressionBuilderInterface
         if ($condition instanceof ConditionInterface) {
             $negatedCondition = $this->createNegatedCondition($condition);
             if ($negatedCondition !== null) {
-                return $this->queryBuilder->buildCondition($negatedCondition, $params);
+                return $this->queryBuilder->buildCondition($negatedCondition, $params); // @phpstan-ignore argument.type, argument.type
             }
         }
 
-        $sql = $this->queryBuilder->buildCondition($condition, $params);
+        $sql = $this->queryBuilder->buildCondition($condition, $params); // @phpstan-ignore argument.type
         return $sql === '' ? '' : "NOT ($sql)";
     }
 
+    /**
+     * @return array<int|string, mixed>|string|ExpressionInterface|null
+     */
     protected function createNegatedCondition(ConditionInterface $condition): array|string|ExpressionInterface|null
     {
         return match ($condition::class) {

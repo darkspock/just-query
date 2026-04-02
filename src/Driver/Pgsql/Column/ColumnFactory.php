@@ -105,6 +105,9 @@ final class ColumnFactory extends AbstractColumnFactory
         'datemultirange' => PgsqlColumnType::DATEMULTIRANGE,
     ];
 
+    /**
+     * @param array<string, mixed> $info
+     */
     public function fromType(string $type, array $info = []): ColumnInterface
     {
         $column = parent::fromType($type, $info);
@@ -116,6 +119,9 @@ final class ColumnFactory extends AbstractColumnFactory
         return $column;
     }
 
+    /**
+     * @param array<string, mixed> $info
+     */
     public function fromPseudoType(string $pseudoType, array $info = []): ColumnInterface
     {
         // PostgreSQL doesn't support unsigned types
@@ -127,11 +133,14 @@ final class ColumnFactory extends AbstractColumnFactory
         return new ColumnDefinitionParser();
     }
 
+    /**
+     * @param array<string, mixed> $info
+     */
     protected function getColumnClass(string $type, array $info = []): string
     {
         return match ($type) {
             ColumnType::BOOLEAN => BooleanColumn::class,
-            ColumnType::BIT => BitColumnInternal::className($info['size'] ?? null),
+            ColumnType::BIT => BitColumnInternal::className($info['size'] ?? null), // @phpstan-ignore argument.type
             ColumnType::TINYINT => IntegerColumn::class,
             ColumnType::SMALLINT => IntegerColumn::class,
             ColumnType::INTEGER => IntegerColumn::class,
@@ -199,7 +208,7 @@ final class ColumnFactory extends AbstractColumnFactory
      */
     private function initializeStructuredDefaultValue(StructuredColumn $column): void
     {
-        /** @psalm-var array|null $defaultValue */
+        /** @var array<int|string, mixed>|null $defaultValue */
         $defaultValue = $column->getDefaultValue();
 
         if (is_array($defaultValue)) {

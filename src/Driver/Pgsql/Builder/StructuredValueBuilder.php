@@ -24,16 +24,21 @@ final class StructuredValueBuilder extends AbstractStructuredValueBuilder
     {
         $param = new Param($value, DataType::STRING);
 
+        /** @phpstan-ignore argument.type */
         return $this->queryBuilder->bindParam($param, $params) . $this->getTypeHint($expression);
     }
 
     protected function buildSubquery(QueryInterface $query, StructuredValue $expression, array &$params): string
     {
+        /** @phpstan-ignore argument.type */
         [$sql, $params] = $this->queryBuilder->build($query, $params);
 
         return "($sql)" . $this->getTypeHint($expression);
     }
 
+    /**
+     * @param array<string, mixed>|object $value
+     */
     protected function buildValue(array|object $value, StructuredValue $expression, array &$params): string
     {
         $value = $this->prepareValues($value, $expression);
@@ -43,6 +48,9 @@ final class StructuredValueBuilder extends AbstractStructuredValueBuilder
         return 'ROW(' . implode(',', $placeholders) . ')' . $this->getTypeHint($expression);
     }
 
+    /**
+     * @return array<int|string, mixed>|string
+     */
     protected function getLazyArrayValue(LazyArrayInterface $value): array|string
     {
         if ($value instanceof StructuredLazyArray) {
@@ -55,9 +63,10 @@ final class StructuredValueBuilder extends AbstractStructuredValueBuilder
     /**
      * Builds a placeholder array out of $expression value.
      *
-     * @param array $value The expression value.
+     * @param array<string, mixed> $value The expression value.
      * @param StructuredValue $expression The structured expression.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
+     * @return array<int, string>
      */
     private function buildPlaceholders(array $value, StructuredValue $expression, array &$params): array
     {

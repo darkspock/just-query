@@ -23,7 +23,7 @@ use FastPHP\QueryBuilder\Profiler\Context\ContextInterface;
  */
 final class QueryProfiler implements ProfilerInterface
 {
-    /** @var array{sql: string, time: float, params: ?array, error: ?string}[] */
+    /** @var array<int, array<string, mixed>> */
     private array $queries = [];
 
     /** @var array<string, float> */
@@ -58,7 +58,7 @@ final class QueryProfiler implements ProfilerInterface
         unset($this->timers[$token]);
     }
 
-    /** @return array{sql: string, time: float, params: ?array, error: ?string}[] */
+    /** @return array<int, array<string, mixed>> */
     public function getQueries(): array
     {
         return $this->queries;
@@ -75,7 +75,7 @@ final class QueryProfiler implements ProfilerInterface
         return count($this->queries);
     }
 
-    /** @return array{sql: string, time: float, params: ?array, error: ?string}[] */
+    /** @return array<int, array<string, mixed>> */
     public function getSlowest(int $limit = 10): array
     {
         $queries = $this->queries;
@@ -83,7 +83,7 @@ final class QueryProfiler implements ProfilerInterface
         return array_slice($queries, 0, $limit);
     }
 
-    /** @return array{sql: string, time: float, params: ?array, error: ?string}[] */
+    /** @return array<int, array<string, mixed>> */
     public function getErrors(): array
     {
         return array_values(array_filter($this->queries, static fn (array $q) => $q['error'] !== null));

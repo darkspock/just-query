@@ -29,7 +29,7 @@ final class ColumnDefinitionParser extends \FastPHP\QueryBuilder\Syntax\ColumnDe
         preg_match(self::TYPE_PATTERN, $definition, $matches);
 
         /** @var string $type */
-        $type = $matches[3] ?? preg_replace('/\s*\(\d+\)/', '', $matches[1]);
+        $type = $matches[3] ?? preg_replace('/\s*\(\d+\)/', '', $matches[1] ?? '');
         $type = strtolower($type);
         $info = ['type' => $type];
 
@@ -44,12 +44,12 @@ final class ColumnDefinitionParser extends \FastPHP\QueryBuilder\Syntax\ColumnDe
         }
 
         if (isset($matches[5])) {
-            /** @psalm-var positive-int */
-            $info['dimension'] = substr_count($matches[5], '[');
+            $dimension = substr_count($matches[5], '[');
+            $info['dimension'] = $dimension;
         }
 
-        $extra = substr($definition, strlen($matches[0]));
+        $extra = substr($definition, strlen($matches[0] ?? ''));
 
-        return $info + $this->extraInfo($extra);
+        return $info + $this->extraInfo($extra); // @phpstan-ignore return.type
     }
 }

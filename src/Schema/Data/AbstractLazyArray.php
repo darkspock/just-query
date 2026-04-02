@@ -28,7 +28,7 @@ abstract class AbstractLazyArray implements ArrayAccess, Countable, JsonSerializ
     use LazyArrayTrait;
 
     /**
-     * @var array|string $value The array value that can be represented as:
+     * @var array<int|string, mixed>|string $value The array value that can be represented as:
      * - a string that can be parsed into an array;
      * - an array that is already parsed and typecasted.
      */
@@ -54,16 +54,16 @@ abstract class AbstractLazyArray implements ArrayAccess, Countable, JsonSerializ
      *
      * @param string $value The string retrieved value from the database that can be parsed into an array.
      *
-     * @return array|null The parsed array or `null` if the string value cannot be parsed.
+     * @return array<int|string, mixed>|null The parsed array or `null` if the string value cannot be parsed.
      */
     abstract protected function parse(string $value): ?array;
 
     /**
      * Typecasts the array values to PHP types according to the column information.
      *
-     * @param array $value The array to typecast.
+     * @param array<int|string, mixed> $value The array to typecast.
      *
-     * @return array The typecasted array.
+     * @return array<int|string, mixed> The typecasted array.
      */
     protected function phpTypecast(array $value): array
     {
@@ -87,6 +87,7 @@ abstract class AbstractLazyArray implements ArrayAccess, Countable, JsonSerializ
      * Prepares the value to be used as an array or throws an exception if it's impossible.
      *
      * @psalm-assert array $this->value
+     * @phpstan-assert array<int|string, mixed> $this->value
      */
     protected function prepareValue(): void
     {

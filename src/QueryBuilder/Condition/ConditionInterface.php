@@ -17,7 +17,7 @@ interface ConditionInterface extends ExpressionInterface
      * Creates object by array-definition.
      *
      * @param string $operator Operator in uppercase.
-     * @param array $operands Array of corresponding operands
+     * @param array<int|string, mixed> $operands Array of corresponding operands
      *
      * @throws InvalidArgumentException If input parameters aren't suitable for this condition.
      */

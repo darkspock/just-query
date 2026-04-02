@@ -44,11 +44,17 @@ abstract class AbstractSchema implements SchemaInterface
      * @psalm-var array<string, ColumnInterface|null>
      */
     protected array $resultColumns = [];
-    /** @var string[][] */
+    /**
+     * @var array<string, array<int, string>>
+     */
     protected array $viewNames = [];
-    /** @var string[] */
+    /**
+     * @var array<int, string>
+     */
     private array $schemaNames = [];
-    /** @var string[][] */
+    /**
+     * @var array<string, array<int, string>>
+     */
     private array $tableNames = [];
     /** @var (Check[]|DefaultValue[]|ForeignKey[]|Index|Index[]|TableSchemaInterface|null)[][] */
     private array $tableMetadata = [];
@@ -90,8 +96,11 @@ abstract class AbstractSchema implements SchemaInterface
         $isCacheEnabled = $this->schemaCache->isEnabled();
 
         if ($isCacheEnabled) {
-            /** @var ColumnInterface */
-            $this->resultColumns[$cacheKey] = $this->schemaCache->get($cacheKey);
+            /**
+             * @var ColumnInterface|null $cachedColumn
+             */
+            $cachedColumn = $this->schemaCache->get($cacheKey);
+            $this->resultColumns[$cacheKey] = $cachedColumn;
 
             if (isset($this->resultColumns[$cacheKey])) {
                 return $this->resultColumns[$cacheKey];
@@ -217,7 +226,7 @@ abstract class AbstractSchema implements SchemaInterface
 
     public function getTableSchemas(string $schema = '', bool $refresh = false): array
     {
-        /** @var TableSchemaInterface[] */
+        /** @var array<string, TableSchemaInterface> */
         return $this->getSchemaMetadata($schema, SchemaInterface::SCHEMA, $refresh);
     }
 
@@ -296,7 +305,7 @@ abstract class AbstractSchema implements SchemaInterface
     /**
      * @param string $name The table name.
      *
-     * @return array The cache key for the specified table name.
+     * @return array<string, mixed> The cache key for the specified table name.
      */
     abstract protected function getCacheKey(string $name): array;
 
@@ -310,14 +319,14 @@ abstract class AbstractSchema implements SchemaInterface
     /**
      * Returns the cache key for the column metadata received from the query result.
      *
-     * @param array $metadata The column metadata from the query result.
+     * @param array<string, mixed> $metadata The column metadata from the query result.
      */
     abstract protected function getResultColumnCacheKey(array $metadata): string;
 
     /**
      * Creates a new column instance according to the column metadata received from the query result.
      *
-     * @param array $metadata The column metadata from the query result.
+     * @param array<string, mixed> $metadata The column metadata from the query result.
      */
     abstract protected function loadResultColumn(array $metadata): ?ColumnInterface;
 
@@ -374,7 +383,7 @@ abstract class AbstractSchema implements SchemaInterface
      *
      * @throws NotSupportedException If the DBMS doesn't support this method.
      *
-     * @return string[] All schemas name in the database, except system schemas.
+     * @return array<int, string> All schemas name in the database, except system schemas.
      */
     protected function findSchemaNames(): array
     {
@@ -391,7 +400,7 @@ abstract class AbstractSchema implements SchemaInterface
      *
      * @throws NotSupportedException If the DBMS doesn't support this method.
      *
-     * @return string[] All tables name in the database. The names have NO schema name prefix.
+     * @return array<int, string> All tables name in the database. The names have NO schema name prefix.
      */
     protected function findTableNames(string $schema): array
     {
@@ -407,7 +416,7 @@ abstract class AbstractSchema implements SchemaInterface
      * @param bool $refresh Whether to fetch the latest available table metadata. If this is `false`, cached data may be
      * returned if available.
      *
-     * @return Check[][]|DefaultValue[][]|ForeignKey[][]|Index[]|Index[][]|TableSchemaInterface[] The metadata of the given type for all
+     * @return array<int, Check|DefaultValue|ForeignKey|Index>|array<string, TableSchemaInterface> The metadata of the given type for all
      * tables in the given schema.
      */
     protected function getSchemaMetadata(string $schema, string $type, bool $refresh): array
@@ -416,8 +425,8 @@ abstract class AbstractSchema implements SchemaInterface
         $quoter = $this->db->getQuoter();
         $tableNames = $this->getTableNames($schema, $refresh);
 
-        foreach ($tableNames as $name) {
-            $name = $quoter->quoteSimpleTableName($name);
+        foreach ($tableNames as $tableName) {
+            $name = $quoter->quoteSimpleTableName($tableName);
 
             if ($schema !== '') {
                 $name = $schema . '.' . $name;
@@ -425,9 +434,28 @@ abstract class AbstractSchema implements SchemaInterface
 
             $tableMetadata = $this->getTableTypeMetadata($type, $name, $refresh);
 
-            if ($tableMetadata !== null) {
-                $metadata[] = $tableMetadata;
+            if ($tableMetadata === null) {
+                continue;
             }
+
+            // For SCHEMA type, use table name as key to match interface contract
+            if ($type === SchemaInterface::SCHEMA) {
+                /** @var TableSchemaInterface $tableMetadata */
+                $metadata[$tableName] = $tableMetadata;
+                continue;
+            }
+
+            // For PRIMARY_KEY, add the single Index object to the array
+            if ($type === SchemaInterface::PRIMARY_KEY) {
+                /** @var Index $tableMetadata */
+                $metadata[] = $tableMetadata;
+                continue;
+            }
+
+            // For constraints (CHECKS, DEFAULT_VALUES, FOREIGN_KEYS, INDEXES, UNIQUES),
+            // merge all constraint arrays into a flat array
+            /** @var array<Check|DefaultValue|ForeignKey|Index> $tableMetadata */
+            $metadata = [...$metadata, ...$tableMetadata];
         }
 
         return $metadata;
@@ -569,7 +597,7 @@ abstract class AbstractSchema implements SchemaInterface
      * @param string $schema The schema of the views.
      * Defaults to empty string, meaning the current or default schema.
      *
-     * @return string[] The names of all views in the database.
+     * @return array<int, string> The names of all views in the database.
      */
     protected function findViewNames(string $schema = ''): array
     {

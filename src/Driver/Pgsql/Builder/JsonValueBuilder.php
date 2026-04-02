@@ -29,7 +29,7 @@ final class JsonValueBuilder implements ExpressionBuilderInterface
      * The Method builds the raw SQL from the $expression that won't be additionally escaped or quoted.
      *
      * @param JsonValue $expression The expression to build.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The raw SQL that won't be additionally escaped or quoted.
      */

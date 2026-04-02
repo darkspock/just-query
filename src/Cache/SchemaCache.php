@@ -35,6 +35,7 @@ final class SchemaCache
 {
     private int|DateInterval|null $duration = 3600;
     private bool $enabled = true;
+    /** @var list<string> */
     private array $exclude = [];
 
     /**
@@ -172,7 +173,7 @@ final class SchemaCache
      *
      * Defaults to an empty array. The table names may contain schema prefix, if any. Don't quote the table names.
      *
-     * @param array $value The table names.
+     * @param list<string> $value The table names.
      *
      * @see setEnabled()
      */

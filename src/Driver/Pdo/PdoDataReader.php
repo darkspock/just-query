@@ -32,7 +32,10 @@ use function is_string;
  */
 final class PdoDataReader implements DataReaderInterface
 {
-    /** @psalm-var IndexBy|null $indexBy */
+    /**
+     * @var Closure|string|null
+     * @psalm-var IndexBy|null $indexBy
+     */
     private Closure|string|null $indexBy = null;
     private int $index = 0;
     /** @psalm-var ResultCallbackOne|null $resultCallback */
@@ -47,7 +50,7 @@ final class PdoDataReader implements DataReaderInterface
      */
     public function __construct(private readonly PDOStatement $statement)
     {
-        /** @var array<string,mixed>|false */
+        /** @var array<string,mixed>|false */ // @phpstan-ignore varTag.noVariable,assign.propertyType
         $this->row = $statement->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -96,9 +99,10 @@ final class PdoDataReader implements DataReaderInterface
         }
 
         if (is_string($this->indexBy)) {
-            return (string) $this->row[$this->indexBy];
+            return (string) $this->row[$this->indexBy]; // @phpstan-ignore cast.string
         }
 
+        /** @phpstan-ignore return.type */
         return ($this->indexBy)($this->row);
     }
 
@@ -130,7 +134,7 @@ final class PdoDataReader implements DataReaderInterface
      */
     public function next(): void
     {
-        /** @var array<string,mixed>|false */
+        /** @var array<string,mixed>|false */ // @phpstan-ignore varTag.noVariable,assign.propertyType
         $this->row = $this->statement->fetch(PDO::FETCH_ASSOC);
         $this->index++;
     }

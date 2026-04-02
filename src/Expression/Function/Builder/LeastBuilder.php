@@ -20,7 +20,7 @@ final class LeastBuilder extends MultiOperandFunctionBuilder
      * Builds a SQL `LEAST()` function expression from the given {@see Least} object.
      *
      * @param Least $expression The expression to build.
-     * @param array $params The parameters to bind.
+     * @param array<int|string, mixed> $params The parameters to bind.
      *
      * @return string The SQL `LEAST()` function expression.
      */

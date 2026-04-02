@@ -39,6 +39,8 @@ interface QueryPartsInterface
      * {@see ExpressionInterface} object can be passed to specify the `GROUP` BY part explicitly in plain SQL.
      * {@see ExpressionInterface} object can be passed as well.
      *
+     * @psalm-param array<int, string|ExpressionInterface>|string|ExpressionInterface $columns
+     *
      * @see groupBy()
      */
     public function addGroupBy(array|string|ExpressionInterface $columns): static;
@@ -55,6 +57,8 @@ interface QueryPartsInterface
      * order-by information.
      * Otherwise, the method won't be able to correctly decide the order-by columns.
      * Since {@see ExpressionInterface} an object can be passed to specify the ORDER BY part explicitly in plain SQL.
+     *
+     * @psalm-param array<string, int|ExpressionInterface>|string|ExpressionInterface $columns
      *
      * @see orderBy()
      */
@@ -120,8 +124,10 @@ interface QueryPartsInterface
      *
      * As a result, this method is best suited for building query conditions based on filter values entered by users.
      *
-     * @param array $condition The new `HAVING` condition.
+     * @param array<string, mixed> $condition The new `HAVING` condition.
      * Please refer to {@see having()} on how to specify this parameter.
+     *
+     * @psalm-param array<string, mixed> $condition
      *
      * @throws NotSupportedException If this query doesn't support filtering.
      *
@@ -135,9 +141,9 @@ interface QueryPartsInterface
      *
      * The new condition and the existing one will be joined using the `AND` operator.
      *
-     * @param array|ExpressionInterface|string $condition The new HAVING condition.
+     * @param array<int|string, mixed>|ExpressionInterface|string $condition The new HAVING condition.
      * Please refer to {@see where()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to be bound to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -156,8 +162,10 @@ interface QueryPartsInterface
      *
      * As a result, this method is best suited for building query conditions based on filter values entered by users.
      *
-     * @param array $condition The new `WHERE` condition.
+     * @param array<string, mixed> $condition The new `WHERE` condition.
      * Please refer to {@see where()} on how to specify this parameter.
+     *
+     * @psalm-param array<string, mixed> $condition
      *
      * @throws NotSupportedException If this query doesn't support filtering.
      *
@@ -171,9 +179,9 @@ interface QueryPartsInterface
      *
      * The new condition and the existing one will be joined using the `AND` operator.
      *
-     * @param array|ExpressionInterface|string $condition The new `WHERE` condition.
+     * @param array<int|string, mixed>|ExpressionInterface|string $condition The new `WHERE` condition.
      * Please refer to {@see where()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to be bound to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -209,8 +217,10 @@ interface QueryPartsInterface
      *
      * Note that unlike {@see having()}, you can't pass binding parameters to this method.
      *
-     * @param array $condition The conditions that should be in the `HAVING` part.
+     * @param array<string, mixed> $condition The conditions that should be in the `HAVING` part.
      * See {@see having()} on how to specify this parameter.
+     *
+     * @psalm-param array<string, mixed> $condition
      *
      * @throws NotSupportedException If this query doesn't support filtering.
      *
@@ -242,8 +252,10 @@ interface QueryPartsInterface
      *
      * Note that unlike {@see where()}, you can't pass binding parameters to this method.
      *
-     * @param array $condition The conditions that should be in the `WHERE` part.
+     * @param array<string, mixed> $condition The conditions that should be in the `WHERE` part.
      * {@see where()} On how to specify this parameter.
+     *
+     * @psalm-param array<string, mixed> $condition
      *
      * @throws NotSupportedException If this query doesn't support filtering.
      *
@@ -345,6 +357,8 @@ interface QueryPartsInterface
      * {@see ExpressionInterface} object can be passed to specify the `GROUP BY` part explicitly in plain SQL.
      * {@see ExpressionInterface} object can be passed as well.
      *
+     * @psalm-param array<int, string|ExpressionInterface>|string|ExpressionInterface $columns
+     *
      * @see addGroupBy()
      */
     public function groupBy(array|string|ExpressionInterface $columns): static;
@@ -352,9 +366,9 @@ interface QueryPartsInterface
     /**
      * Initially sets the `HAVING` part of the query.
      *
-     * @param array|ExpressionInterface|string|null $condition The conditions to be put after `HAVING`.
+     * @param array<int|string, mixed>|ExpressionInterface|string|null $condition The conditions to be put after `HAVING`.
      * Please refer to {@see where()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -368,8 +382,8 @@ interface QueryPartsInterface
     /**
      * Overwrites the `HAVING` part of the query.
      *
-     * @param array|ExpressionInterface|string|null $condition The conditions to be put after `HAVING`.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed>|ExpressionInterface|string|null $condition The conditions to be put after `HAVING`.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -380,7 +394,7 @@ interface QueryPartsInterface
     /**
      * Sets the {@see indexBy} property.
      *
-     * @param Closure|string|null $column The name of the column by which the query results should be indexed by.
+     * @param (Closure(array|object): int)|string|null $column The name of the column by which the query results should be indexed by.
      * This can also be callable (for example, anonymous function) that returns the index value based on the given data.
      * The signature of the callable should be:
      *
@@ -391,6 +405,7 @@ interface QueryPartsInterface
      * }
      * ```
      *
+     * @param Closure|string|null $column
      * @psalm-param IndexBy|null $column
      */
     public function indexBy(string|Closure|null $column): static;
@@ -406,9 +421,9 @@ interface QueryPartsInterface
      * Use an array to represent joining with a sub-query. The array must contain only one element.
      * The value must be a {@see Query} object representing the sub-query while the corresponding key represents the
      * alias for the sub-query.
-     * @param array|ExpressionInterface|string $on The join condition that should appear in the ON part. Please refer to
+     * @param array<int|string, mixed>|ExpressionInterface|string $on The join condition that should appear in the ON part. Please refer to
      * {@see join()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param JoinTable $table
      * @psalm-param ParamsType $params
@@ -433,10 +448,10 @@ interface QueryPartsInterface
      * Use an array to represent joining with a sub-query. The array must contain only one element.
      * The value must be a {@see Query} object representing the sub-query while the corresponding key represents the
      * alias for the sub-query.
-     * @param array|ExpressionInterface|string $on The join condition that should appear in the ON part. Please refer to
+     * @param array<int|string, mixed>|ExpressionInterface|string $on The join condition that should appear in the ON part. Please refer to
      * {@see where()} on how to specify this parameter. Keys and values of an associative array are treated as column names
      * and will be quoted before being used in an SQL query.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param JoinTable $table
      * @psalm-param ParamsType $params
@@ -459,9 +474,9 @@ interface QueryPartsInterface
      * Use an array to represent joining with a sub-query. The array must contain only one element.
      * The value must be a {@see Query} object representing the sub-query while the corresponding key represents the
      * alias for the sub-query.
-     * @param array|ExpressionInterface|string $on The join condition that should appear in the ON part. Please refer to
+     * @param array<int|string, mixed>|ExpressionInterface|string $on The join condition that should appear in the ON part. Please refer to
      * {@see join()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param JoinTable $table
      * @psalm-param ParamsType $params
@@ -499,6 +514,8 @@ interface QueryPartsInterface
      * Otherwise, the method won't be able to correctly decide the order-by columns.
      * Since {@see ExpressionInterface} an object can be passed to specify the `ORDER BY` part explicitly in plain SQL.
      *
+     * @psalm-param array<string, int|ExpressionInterface>|string|ExpressionInterface $columns
+     *
      * @see addOrderBy()
      */
     public function orderBy(array|string|ExpressionInterface $columns): static;
@@ -512,7 +529,9 @@ interface QueryPartsInterface
      * {@see Query::isEmpty()}. As a result, this method is best suited for building query conditions based on filter
      * values entered by users.
      *
-     * @param array $condition The new `WHERE` condition. Please refer to {@see where()} on how to specify this parameter.
+     * @param array<string, mixed> $condition The new `WHERE` condition. Please refer to {@see where()} on how to specify this parameter.
+     *
+     * @psalm-param array<string, mixed> $condition
      *
      * @throws NotSupportedException
      *
@@ -530,8 +549,10 @@ interface QueryPartsInterface
      * {@see Query::isEmpty()}. As a result, this method is best suited for building query conditions based on filter
      * values entered by users.
      *
-     * @param array $condition The new `HAVING` condition. Please refer to {@see having()} on how to specify this
+     * @param array<string, mixed> $condition The new `HAVING` condition. Please refer to {@see having()} on how to specify this
      * parameter.
+     *
+     * @psalm-param array<string, mixed> $condition
      *
      * @throws NotSupportedException
      *
@@ -545,9 +566,9 @@ interface QueryPartsInterface
      *
      * The new condition and the existing one will be joined using the `OR` operator.
      *
-     * @param array|ExpressionInterface|string $condition The new `HAVING` condition.
+     * @param array<int|string, mixed>|ExpressionInterface|string $condition The new `HAVING` condition.
      * Please refer to {@see where()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -561,9 +582,9 @@ interface QueryPartsInterface
      *
      * The new condition and the existing one will be joined using the `OR` operator.
      *
-     * @param array|ExpressionInterface|string $condition The new `WHERE` condition.
+     * @param array<int|string, mixed>|ExpressionInterface|string $condition The new `WHERE` condition.
      * Please refer to {@see where()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -583,9 +604,9 @@ interface QueryPartsInterface
      * Use an array to represent joining with a sub-query. The array must contain only one element.
      * The value must be a {@see Query} object representing the sub-query while the corresponding key represents the
      * alias for the sub-query.
-     * @param array|ExpressionInterface|string $on The join condition that should appear in the ON part.
+     * @param array<int|string, mixed>|ExpressionInterface|string $on The join condition that should appear in the ON part.
      * Please refer to {@see join()} on how to specify this parameter.
-     * @param array $params The parameters (name => value) to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters (name => value) to be bound to the query.
      *
      * @psalm-param JoinTable $table
      * @psalm-param ParamsType $params
@@ -631,7 +652,7 @@ interface QueryPartsInterface
     /**
      * Specify the joins for a `SELECT` statement in a database query.
      *
-     * @param array $value The joins to perform in the query. The format is the following:
+     * @param list<array{string, array<ExpressionInterface|string>|ExpressionInterface|string, array<int|string, mixed>|ExpressionInterface|string}> $value The joins to perform in the query. The format is the following:
      *
      * ```
      * [
@@ -640,6 +661,7 @@ interface QueryPartsInterface
      * ]
      * ```
      *
+     * @param array<int, array<int|string, mixed>> $value
      * @psalm-param list<Join> $value
      */
     public function setJoins(array $value): static;
@@ -647,7 +669,9 @@ interface QueryPartsInterface
     /**
      * Specify queries for a `SELECT` statement that are combined with `UNION`s.
      *
-     * @param array $value The queries to union such as `['SELECT * FROM table1', 'SELECT * FROM table2']`.
+     * @param array<string, mixed> $value The queries to union such as `['SELECT * FROM table1', 'SELECT * FROM table2']`.
+     *
+     * @psalm-param array<int, array{query: string|QueryInterface, all: bool}> $value
      */
     public function setUnions(array $value): static;
 
@@ -746,8 +770,8 @@ interface QueryPartsInterface
      * **Note that this method will override any existing `WHERE` condition. You might want to use {@see andWhere()}
      * or {@see orWhere()} instead.**
      *
-     * @param array|ExpressionInterface|string|null $condition The conditions to put in the `WHERE` part.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed>|ExpressionInterface|string|null $condition The conditions to put in the `WHERE` part.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param ParamsType $params
      *
@@ -761,8 +785,8 @@ interface QueryPartsInterface
     /**
      * Overwrites the `WHERE` part of the query.
      *
-     * @param array|ExpressionInterface|string|null $condition The conditions to put in the `WHERE` part.
-     * @param array $params The parameters (name => value) to bind to the query.
+     * @param array<int|string, mixed>|ExpressionInterface|string|null $condition The conditions to put in the `WHERE` part.
+     * @param array<int|string, mixed> $params The parameters (name => value) to bind to the query.
      *
      * @psalm-param ParamsType $params
      *

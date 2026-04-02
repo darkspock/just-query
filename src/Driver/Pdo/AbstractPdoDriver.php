@@ -21,6 +21,9 @@ abstract class AbstractPdoDriver implements PdoDriverInterface
     protected string $dsn;
     protected ?string $charset = null;
 
+    /**
+     * @param array<int|string, mixed> $attributes
+     */
     public function __construct(
         string|Stringable $dsn,
         protected string $username = '',

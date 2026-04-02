@@ -93,22 +93,31 @@ class Query implements QueryInterface
     protected bool $distinct = false;
     /** @psalm-var From */
     protected array $from = [];
+    /** @var array<int|string, ExpressionInterface|string> */
     protected array $groupBy = [];
+    /** @var array<int|string, mixed>|ExpressionInterface|string|null */
     protected array|ExpressionInterface|string|null $having = null;
-    /** @psalm-var list<Join> */
+    /** @var array<int, array<int|string, mixed>> @psalm-var list<Join> */
     protected array $joins = [];
+    /** @var array<string, int|ExpressionInterface> */
     protected array $orderBy = [];
+    /** @var array<int|string, mixed> */
     protected array $params = [];
     /** @psalm-var ResultCallback|null $resultCallback */
     protected ?Closure $resultCallback = null;
+    /** @var array<int, array{query: QueryInterface|string, all: bool}> */
     protected array $union = [];
     /** @var WithQuery[] */
     protected array $withQueries = [];
-    /** @psalm-var IndexBy|null $indexBy */
+    /** @var (Closure(array<string,mixed>|object):int|string)|string|null @psalm-var IndexBy|null $indexBy */
     protected Closure|string|null $indexBy = null;
     protected ExpressionInterface|int|null $limit = null;
     protected ExpressionInterface|int|null $offset = null;
+    /** @var array<int|string, mixed>|string|ExpressionInterface|null */
     protected array|string|ExpressionInterface|null $where = null;
+
+    /** @var array<string, list<array{type: string, indexes: list<string>}>> */
+    protected array $indexHints = [];
 
     /**
      * @psalm-var list<string>
@@ -125,13 +134,14 @@ class Query implements QueryInterface
         if ($columns instanceof ExpressionInterface) {
             $columns = [$columns];
         } elseif (!is_array($columns)) {
-            /** @var string[] */
             $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
         }
 
         if ($this->groupBy === []) {
+            /** @phpstan-ignore assign.propertyType */
             $this->groupBy = $columns;
         } else {
+            /** @phpstan-ignore argument.type, assign.propertyType */
             $this->groupBy = array_merge($this->groupBy, $columns);
         }
 
@@ -143,8 +153,10 @@ class Query implements QueryInterface
         $columns = $this->normalizeOrderBy($columns);
 
         if ($this->orderBy === []) {
+            /** @phpstan-ignore assign.propertyType */
             $this->orderBy = $columns;
         } else {
+            /** @phpstan-ignore assign.propertyType */
             $this->orderBy = array_merge($this->orderBy, $columns);
         }
 
@@ -203,7 +215,7 @@ class Query implements QueryInterface
         } elseif (
             is_array($this->having)
             && isset($this->having[0])
-            && strcasecmp((string) $this->having[0], 'and') === 0
+            && strcasecmp((string) $this->having[0], 'and') === 0 // @phpstan-ignore cast.string
         ) {
             $this->having[] = $condition;
         } else {
@@ -235,7 +247,10 @@ class Query implements QueryInterface
             $value = substr((string) $value, strlen($operator));
         }
 
-        return $this->andFilterWhere([$operator, $column, $value]);
+        /** @var array<int|string, string|null> $filterCondition */
+        $filterCondition = [$operator, $column, $value];
+        /** @phpstan-ignore argument.type */
+        return $this->andFilterWhere($filterCondition);
     }
 
     public function andWhere($condition, array $params = []): static
@@ -245,6 +260,7 @@ class Query implements QueryInterface
         } elseif (
             is_array($this->where)
             && isset($this->where[0])
+            /** @phpstan-ignore cast.string */
             && strcasecmp((string) $this->where[0], 'and') === 0
         ) {
             $this->where[] = $condition;
@@ -257,13 +273,19 @@ class Query implements QueryInterface
         return $this;
     }
 
+    /**
+     * @return array<int, array<string, mixed>|object>
+     */
     public function all(): array
     {
         if ($this->emulateExecution === true) {
             return [];
         }
 
-        return $this->index($this->createCommand()->queryAll());
+        /** @var list<array> $rows */
+        $rows = $this->createCommand()->queryAll();
+        /** @phpstan-ignore return.type, argument.type */
+        return $this->index($rows);
     }
 
     public function average(string $sql): int|float|string|null
@@ -321,7 +343,12 @@ class Query implements QueryInterface
             return [];
         }
 
-        return array_combine(array_map($this->indexBy, $rows), array_column($rows, key(current($rows))));
+        /**
+         * @var callable(array<int|string, mixed>): int $indexBy
+         * @phpstan-ignore varTag.nativeType
+         */
+        $indexBy = $this->indexBy;
+        return array_combine(array_map($indexBy, $rows), array_column($rows, key(current($rows))));
     }
 
     public function count(string $sql = '*'): int|string
@@ -353,7 +380,7 @@ class Query implements QueryInterface
     {
         return $this->createCommand()
             ->query()
-            ->indexBy($this->indexBy)
+            ->indexBy($this->indexBy) // @phpstan-ignore argument.type
             ->resultCallback($this->resultCallback !== null ? $this->callResultCallbackOnOne(...) : null);
     }
 
@@ -455,23 +482,59 @@ class Query implements QueryInterface
         return $this->from;
     }
 
+    public function getIndexHints(): array
+    {
+        return $this->indexHints;
+    }
+
+    public function forceIndex(string $table, array|string $indexes): static
+    {
+        $this->indexHints[$table][] = ['type' => 'FORCE INDEX', 'indexes' => (array) $indexes];
+        return $this;
+    }
+
+    public function useIndex(string $table, array|string $indexes): static
+    {
+        $this->indexHints[$table][] = ['type' => 'USE INDEX', 'indexes' => (array) $indexes];
+        return $this;
+    }
+
+    public function ignoreIndex(string $table, array|string $indexes): static
+    {
+        $this->indexHints[$table][] = ['type' => 'IGNORE INDEX', 'indexes' => (array) $indexes];
+        return $this;
+    }
+
+    /**
+     * @return array<int|string, string|ExpressionInterface>
+     */
     public function getGroupBy(): array
     {
         return $this->groupBy;
     }
 
+    /**
+     * @return array<int|string, mixed>|ExpressionInterface|string|null
+     */
     public function getHaving(): string|array|ExpressionInterface|null
     {
         return $this->having;
     }
 
+    /**
+     * @return (Closure(array<int|string, mixed>|object): int|string)|string|null
+     */
     public function getIndexBy(): Closure|string|null
     {
-        return $this->indexBy;
+        return $this->indexBy; // @phpstan-ignore return.type
     }
 
+    /**
+     * @return list<array{string, array<ExpressionInterface|string>|ExpressionInterface|string, array<int|string, mixed>|ExpressionInterface|string}>
+     */
     public function getJoins(): array
     {
+        /** @phpstan-ignore return.type */
         return $this->joins;
     }
 
@@ -485,13 +548,21 @@ class Query implements QueryInterface
         return $this->offset;
     }
 
+    /**
+     * @return array<string, int>
+     */
     public function getOrderBy(): array
     {
+        /** @phpstan-ignore return.type */
         return $this->orderBy;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getParams(): array
     {
+        /** @phpstan-ignore return.type */
         return $this->params;
     }
 
@@ -520,6 +591,9 @@ class Query implements QueryInterface
         return $this->union;
     }
 
+    /**
+     * @return array<int|string, mixed>|ExpressionInterface|string|null
+     */
     public function getWhere(): array|string|ExpressionInterface|null
     {
         return $this->where;
@@ -554,6 +628,9 @@ class Query implements QueryInterface
         return $this;
     }
 
+    /**
+     * @param (Closure(array<int|string, mixed>|object): int|string)|string|null $column
+     */
     public function indexBy(Closure|string|null $column): static
     {
         $this->indexBy = $column;
@@ -629,7 +706,9 @@ class Query implements QueryInterface
 
     public function orderBy(array|string|ExpressionInterface $columns): static
     {
-        $this->orderBy = $this->normalizeOrderBy($columns);
+        $normalized = $this->normalizeOrderBy($columns);
+        /** @phpstan-ignore assign.propertyType */
+        $this->orderBy = $normalized;
         return $this;
     }
 
@@ -728,6 +807,9 @@ class Query implements QueryInterface
         return $this;
     }
 
+    /**
+     * @param list<array{string, array<ExpressionInterface|string>|ExpressionInterface|string, array<int|string, mixed>|ExpressionInterface|string}> $value
+     */
     public function setJoins(array $value): static
     {
         $this->joins = $value;
@@ -861,7 +943,8 @@ class Query implements QueryInterface
     }
 
     /**
-     * @return array[]|object[]
+     * @param list<array<string,mixed>> $rows
+     * @return array<int, array<string, mixed>|object>
      *
      * @psalm-param list<array<string,mixed>> $rows
      * @psalm-return (
@@ -872,25 +955,31 @@ class Query implements QueryInterface
      */
     protected function index(array $rows): array
     {
-        return DbArrayHelper::index($rows, $this->indexBy, $this->resultCallback);
+        /**
+         * @var (Closure(array<int|string, mixed>|object): int|string)|string|null $indexBy
+         */
+        $indexBy = $this->indexBy;
+        return DbArrayHelper::index($rows, $indexBy, $this->resultCallback);
     }
 
     /**
-     * @psalm-param array<string, mixed> $row
+     * @param array<string, mixed> $row
      * @return array<string, mixed>|object
+     * @psalm-param array<string, mixed> $row
      */
     private function callResultCallbackOnOne(array $row): array|object
     {
-        /** @psalm-var ResultCallback $this->resultCallback */
-        return ($this->resultCallback)([$row])[0];
+        /** @psalm-var ResultCallback $callback */
+        $callback = $this->resultCallback;
+        return $callback([$row])[0];
     }
 
     /**
      * Removes {@see Query::isEmpty()} from the given query condition.
      *
-     * @param array|string $condition The original condition.
+     * @param array<int|string, mixed>|string $condition The original condition.
      *
-     * @return array|string The condition with {@see Query::isEmpty()} removed.
+     * @return array<int|string, mixed>|string The condition with {@see Query::isEmpty()} removed.
      */
     private function filterCondition(array|string $condition): array|string
     {
@@ -922,9 +1011,9 @@ class Query implements QueryInterface
             case 'NOT':
             case 'AND':
             case 'OR':
-                /** @psalm-var array<array-key, array|string> $condition */
+                /** @var array<int|string, mixed> $condition */
                 foreach ($condition as $i => $operand) {
-                    $subCondition = $this->filterCondition($operand);
+                    $subCondition = $this->filterCondition($operand); // @phpstan-ignore argument.type
                     if ($this->isEmpty($subCondition)) {
                         unset($condition[$i]);
                     } else {
@@ -981,7 +1070,8 @@ class Query implements QueryInterface
     /**
      * Normalizes a format of `ORDER BY` data.
      *
-     * @param array|ExpressionInterface|string $columns The columns value to normalize.
+     * @param array<int|string, mixed>|ExpressionInterface|string $columns The columns value to normalize.
+     * @return array<int|string, mixed>
      *
      * See {@see orderBy()} and {@see addOrderBy()}.
      */
@@ -995,10 +1085,10 @@ class Query implements QueryInterface
             return $columns;
         }
 
-        /** @var string[] */
         $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
         $result = [];
 
+        /** @phpstan-ignore foreach.nonIterable */
         foreach ($columns as $column) {
             if (preg_match('/^(.*?)\s+(asc|desc)$/i', $column, $matches)) {
                 $result[$matches[1]] = strcasecmp($matches[2], 'desc') ? SORT_ASC : SORT_DESC;

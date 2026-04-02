@@ -25,7 +25,7 @@ interface ExpressionBuilderInterface
      * escaped or quoted.
      *
      * @param ExpressionInterface $expression The expression to be built.
-     * @param array $params The binding parameters.
+     * @param array<int|string, mixed> $params The binding parameters.
      *
      * @return string The raw SQL that will not be additionally escaped or quoted.
      *

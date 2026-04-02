@@ -59,6 +59,7 @@ final class Connection extends AbstractPdoConnection
             $command->setProfiler($this->profiler);
         }
 
+        /** @phpstan-ignore argument.type */
         return $command->bindValues($params);
     }
 

@@ -41,6 +41,9 @@ final class CaseXBuilder extends \FastPHP\QueryBuilder\Expression\Statement\Buil
         return $sql . ' END';
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     private function buildCaseValueWithTypeHint(mixed $value, string $typeHint, array &$params): string
     {
         $builtValue = $this->buildCaseValue($value, $params);
@@ -48,6 +51,9 @@ final class CaseXBuilder extends \FastPHP\QueryBuilder\Expression\Statement\Buil
         return $typeHint !== '' ? "($builtValue)$typeHint" : $builtValue;
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     private function buildConditionWithTypeHint(mixed $condition, string $typeHint, array &$params): string
     {
         $builtCondition = $this->buildCondition($condition, $params);

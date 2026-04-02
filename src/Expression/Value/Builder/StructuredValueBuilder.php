@@ -23,31 +23,44 @@ use const JSON_THROW_ON_ERROR;
  */
 final class StructuredValueBuilder extends AbstractStructuredValueBuilder
 {
+    /**
+     * @param array<int|string, mixed> $params
+     */
     protected function buildStringValue(string $value, StructuredValue $expression, array &$params): string
     {
         $param = new Param($value, DataType::STRING);
 
-        return $this->queryBuilder->bindParam($param, $params);
+        return $this->queryBuilder->bindParam($param, $params); // @phpstan-ignore argument.type
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     protected function buildSubquery(QueryInterface $query, StructuredValue $expression, array &$params): string
     {
-        [$sql, $params] = $this->queryBuilder->build($query, $params);
+        [$sql, $params] = $this->queryBuilder->build($query, $params); // @phpstan-ignore argument.type
 
         return "($sql)";
     }
 
+    /**
+     * @param array<string, mixed>|object $value
+     * @param array<int|string, mixed> $params
+     */
     protected function buildValue(array|object $value, StructuredValue $expression, array &$params): string
     {
         $value = $this->prepareValues($value, $expression);
         $param = new Param(json_encode(array_values($value), JSON_THROW_ON_ERROR), DataType::STRING);
 
-        return $this->queryBuilder->bindParam($param, $params);
+        return $this->queryBuilder->bindParam($param, $params); // @phpstan-ignore argument.type
     }
 
+    /**
+     * @return array<string, mixed>|string
+     */
     protected function getLazyArrayValue(LazyArrayInterface $value): array|string
     {
-        return match ($value::class) {
+        return match ($value::class) { // @phpstan-ignore return.type
             LazyArray::class, JsonLazyArray::class, StructuredLazyArray::class => $value->getRawValue(),
             default => $value->getValue(),
         };

@@ -23,6 +23,7 @@ class SimpleBuilder implements ExpressionBuilderInterface
      * Build SQL for {@see Simple}.
      *
      * @param Simple $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws NotSupportedException
      */
@@ -33,6 +34,7 @@ class SimpleBuilder implements ExpressionBuilderInterface
         $value = $expression->value;
 
         $column = $column instanceof ExpressionInterface
+            /** @phpstan-ignore argument.type */
             ? $this->queryBuilder->buildExpression($column, $params)
             : $this->queryBuilder->getQuoter()->quoteColumnName($column);
 
@@ -41,6 +43,7 @@ class SimpleBuilder implements ExpressionBuilderInterface
         }
 
         if ($value instanceof ExpressionInterface) {
+            /** @phpstan-ignore argument.type */
             return "$column $operator {$this->queryBuilder->buildExpression($value, $params)}";
         }
 

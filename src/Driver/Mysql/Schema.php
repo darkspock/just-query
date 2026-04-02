@@ -152,7 +152,7 @@ final class Schema extends AbstractPdoSchema
         SQL;
 
         /** @var string[] */
-        return $this->db->createCommand($sql)->queryColumn();
+        return array_values($this->db->createCommand($sql)->queryColumn()); // @phpstan-ignore return.type
     }
 
     protected function findTableComment(TableSchemaInterface $tableSchema): void
@@ -182,7 +182,7 @@ final class Schema extends AbstractPdoSchema
         }
 
         /** @var string[] */
-        return $this->db->createCommand($sql)->queryColumn();
+        return array_values($this->db->createCommand($sql)->queryColumn()); // @phpstan-ignore return.type
     }
 
     protected function findViewNames(string $schema = ''): array
@@ -197,7 +197,7 @@ final class Schema extends AbstractPdoSchema
         };
 
         /** @var string[] */
-        return $this->db->createCommand($sql)->queryColumn();
+        return array_values($this->db->createCommand($sql)->queryColumn()); // @phpstan-ignore return.type
     }
 
     /**
@@ -351,12 +351,12 @@ final class Schema extends AbstractPdoSchema
         foreach ($foreignKeys as $name => $foreignKey) {
             $result[$name] = new ForeignKey(
                 $name,
-                array_column($foreignKey, 'column_name'),
-                $foreignKey[0]['foreign_table_schema'],
-                $foreignKey[0]['foreign_table_name'],
-                array_column($foreignKey, 'foreign_column_name'),
-                $foreignKey[0]['on_delete'],
-                $foreignKey[0]['on_update'],
+                array_column($foreignKey, 'column_name'), // @phpstan-ignore argument.type, argument.type
+                $foreignKey[0]['foreign_table_schema'], // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
+                $foreignKey[0]['foreign_table_name'], // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
+                array_column($foreignKey, 'foreign_column_name'), // @phpstan-ignore argument.type, argument.type
+                $foreignKey[0]['on_delete'], // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
+                $foreignKey[0]['on_update'], // @phpstan-ignore offsetAccess.nonOffsetAccessible, offsetAccess.nonOffsetAccessible, argument.type
             );
         }
 
@@ -438,7 +438,7 @@ final class Schema extends AbstractPdoSchema
     /**
      * Loads the column information into a {@see ColumnInterface} object.
      *
-     * @param array $info The column information.
+     * @param array<string, mixed> $info The column information.
      *
      * @return ColumnInterface The column object.
      *
@@ -478,6 +478,9 @@ final class Schema extends AbstractPdoSchema
         return $column;
     }
 
+    /**
+     * @return array<int, string>
+     */
     private function getJsonColumns(TableSchemaInterface $table): array
     {
         $sql = $this->getCreateTableSql($table);

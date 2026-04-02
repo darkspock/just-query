@@ -39,7 +39,6 @@ abstract class AbstractColumn implements ColumnInterface
 {
     /**
      * @var string The default column abstract type
-     * @psalm-var ColumnType::*
      */
     protected const DEFAULT_TYPE = ColumnType::STRING;
 
@@ -93,7 +92,7 @@ abstract class AbstractColumn implements ColumnInterface
         private bool $unsigned = false,
         mixed ...$args,
     ) {
-        $this->type = $type ?? static::DEFAULT_TYPE;
+        $this->type = $type ?? static::DEFAULT_TYPE; // @phpstan-ignore assign.propertyType
 
         if (array_key_exists('defaultValue', $args)) {
             $this->defaultValue = $args['defaultValue'];
@@ -213,7 +212,7 @@ abstract class AbstractColumn implements ColumnInterface
     /** @psalm-mutation-free */
     public function hasDefaultValue(): bool
     {
-        return property_exists($this, 'defaultValue');
+        return property_exists($this, 'defaultValue'); // @phpstan-ignore function.alreadyNarrowedType
     }
 
     /** @psalm-mutation-free */

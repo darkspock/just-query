@@ -31,7 +31,7 @@ final class Expression implements ExpressionInterface, Stringable
 {
     /**
      * @param string $expression The DB expression.
-     * @param array $params List of parameters to bind to this expression. The keys are placeholders appearing in
+     * @param array<int|string, mixed> $params List of parameters to bind to this expression. The keys are placeholders appearing in
      * {@see expression} and the values are the corresponding parameter values.
      *
      * @psalm-param ParamsType $params

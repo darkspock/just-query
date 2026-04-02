@@ -20,6 +20,7 @@ final class DMLQueryBuilder extends AbstractDMLQueryBuilder
 {
     public function insertReturningPks(string $table, array|QueryInterface $columns, array &$params = []): string
     {
+        /** @phpstan-ignore parameterByRef.type */
         $insertSql = $this->insert($table, $columns, $params);
         $tableSchema = $this->schema->getTableSchema($table);
         $primaryKeys = $tableSchema?->getPrimaryKey() ?? [];
@@ -66,6 +67,7 @@ final class DMLQueryBuilder extends AbstractDMLQueryBuilder
         array|bool $updateColumns = true,
         array &$params = [],
     ): string {
+        /** @phpstan-ignore parameterByRef.type */
         $insertSql = $this->insert($table, $insertColumns, $params);
 
         [$uniqueNames, , $updateNames] = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns);
@@ -80,7 +82,7 @@ final class DMLQueryBuilder extends AbstractDMLQueryBuilder
         }
 
         $quotedUniqueNames = array_map($this->quoter->quoteColumnName(...), $uniqueNames);
-        $updates = $this->prepareUpsertSets($table, $updateColumns, $updateNames, $params);
+        $updates = $this->prepareUpsertSets($table, $updateColumns, $updateNames, $params); // @phpstan-ignore argument.type, argument.type
 
         return $insertSql
             . ' ON CONFLICT (' . implode(', ', $quotedUniqueNames) . ')'
@@ -122,7 +124,7 @@ final class DMLQueryBuilder extends AbstractDMLQueryBuilder
     private function getDummyColumn(string $table): string
     {
         /** @psalm-suppress PossiblyNullReference */
-        $columns = $this->schema->getTableSchema($table)->getColumns();
+        $columns = $this->schema->getTableSchema($table)->getColumns(); // @phpstan-ignore method.nonObject
 
         foreach ($columns as $column) {
             if ($column->isPrimaryKey() || $column->isUnique()) {
@@ -130,10 +132,10 @@ final class DMLQueryBuilder extends AbstractDMLQueryBuilder
             }
 
             /** @psalm-suppress PossiblyNullArgument */
-            return $this->quoter->quoteColumnName($column->getName());
+            return $this->quoter->quoteColumnName($column->getName()); // @phpstan-ignore argument.type
         }
 
         /** @psalm-suppress PossiblyNullArgument, PossiblyFalseReference */
-        return $this->quoter->quoteColumnName(end($columns)->getName());
+        return $this->quoter->quoteColumnName(end($columns)->getName()); // @phpstan-ignore method.nonObject,argument.type
     }
 }

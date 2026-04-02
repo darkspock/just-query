@@ -24,7 +24,7 @@ class BitColumn extends AbstractColumn
 
         return match ($value) {
             null, '' => null,
-            default => $value instanceof ExpressionInterface ? $value : (int) $value,
+            default => $value instanceof ExpressionInterface ? $value : (int) $value, // @phpstan-ignore cast.int
         };
     }
 
@@ -34,6 +34,6 @@ class BitColumn extends AbstractColumn
             return null;
         }
 
-        return (int) $value;
+        return (int) $value; // @phpstan-ignore cast.int
     }
 }

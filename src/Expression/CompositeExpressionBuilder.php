@@ -19,11 +19,14 @@ final class CompositeExpressionBuilder implements ExpressionBuilderInterface
         private readonly QueryBuilderInterface $queryBuilder,
     ) {}
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function build(ExpressionInterface $expression, array &$params = []): string
     {
         $parts = [];
         foreach ($expression->expressions as $e) {
-            $parts[] = is_string($e) ? $e : $this->queryBuilder->buildExpression($e, $params);
+            $parts[] = is_string($e) ? $e : $this->queryBuilder->buildExpression($e, $params); // @phpstan-ignore argument.type
         }
         return implode($expression->separator, $parts);
     }

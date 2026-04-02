@@ -17,7 +17,7 @@ abstract class AbstractOverlaps implements ConditionInterface
 {
     /**
      * @param ExpressionInterface|string $column The column name or an expression.
-     * @param ExpressionInterface|iterable $values An array of values that {@see $columns} value should overlap.
+     * @param ExpressionInterface|iterable<mixed> $values An array of values that {@see $columns} value should overlap.
      */
     public function __construct(
         public readonly string|ExpressionInterface $column,
@@ -35,7 +35,7 @@ abstract class AbstractOverlaps implements ConditionInterface
             throw new InvalidArgumentException("Operator \"$operator\" requires two operands.");
         }
 
-        /** @psalm-suppress UnsafeInstantiation */
+        /** @phpstan-ignore new.static */
         return new static(
             self::validateColumn($operator, $operands[0]),
             self::validateValues($operator, $operands[1]),
@@ -61,6 +61,7 @@ abstract class AbstractOverlaps implements ConditionInterface
     /**
      * Validates the given values to be `iterable` or `ExpressionInterface`.
      *
+     * @return iterable<mixed>|ExpressionInterface
      * @throws InvalidArgumentException If the values aren't an `iterable` or `ExpressionInterface`.
      */
     private static function validateValues(string $operator, mixed $values): iterable|ExpressionInterface

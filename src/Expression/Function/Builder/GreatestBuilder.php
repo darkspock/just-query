@@ -20,7 +20,7 @@ final class GreatestBuilder extends MultiOperandFunctionBuilder
      * Builds a SQL `GREATEST()` function expression from the given {@see Greatest} object.
      *
      * @param Greatest $expression The expression to build.
-     * @param array $params The parameters to bind.
+     * @param array<int|string, mixed> $params The parameters to bind.
      *
      * @return string The SQL `GREATEST()` function expression.
      */

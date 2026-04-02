@@ -25,7 +25,7 @@ use FastPHP\QueryBuilder\Schema\Column\AbstractStructuredColumn;
 final class StructuredValue implements ExpressionInterface
 {
     /**
-     * @param array|object|string|null $value The content of the structured type which can be represented as
+     * @param array<string, mixed>|object|string|null $value The content of the structured type which can be represented as
      * - an associative `array` of column names and values;
      * - an indexed `array` of column values in the order of structured type columns;
      * - an {@see JsonSerializable} object that can be converted to an `array` using `jsonSerialize()`;

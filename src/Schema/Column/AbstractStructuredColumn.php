@@ -49,7 +49,7 @@ abstract class AbstractStructuredColumn extends AbstractColumn
     }
 
     /**
-     * @param array|object|string|null $value
+     * @param array<int|string, mixed>|object|string|null $value
      */
     public function dbTypecast(mixed $value): ?ExpressionInterface
     {
@@ -57,6 +57,6 @@ abstract class AbstractStructuredColumn extends AbstractColumn
             return $value;
         }
 
-        return new StructuredValue($value, $this);
+        return new StructuredValue($value, $this); // @phpstan-ignore argument.type
     }
 }

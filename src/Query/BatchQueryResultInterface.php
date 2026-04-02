@@ -73,7 +73,7 @@ interface BatchQueryResultInterface extends Iterator
      *
      * This method is required by the interface {@see Iterator}.
      *
-     * @return array The current dataset.
+     * @return array<int, array<string, mixed>> The current dataset.
      */
     public function current(): array;
 
@@ -99,6 +99,7 @@ interface BatchQueryResultInterface extends Iterator
     public function batchSize(int $value): static;
 
     /**
+     * @param (Closure(array|object): int)|string|null $indexBy
      * @psalm-param IndexBy|null $indexBy
      */
     public function indexBy(Closure|string|null $indexBy): static;

@@ -10,6 +10,9 @@ final class CommandContext implements ContextInterface
 {
     private ?Throwable $exception = null;
 
+    /**
+     * @param array<int|string, mixed>|null $params
+     */
     public function __construct(
         public readonly string $method = '',
         public readonly string $category = '',

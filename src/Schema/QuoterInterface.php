@@ -18,7 +18,7 @@ interface QuoterInterface
      *
      * Both aliases and names are enclosed into `{{ and }}`.
      *
-     * @param array $tableNames Non-empty array.
+     * @param array<int|string, ExpressionInterface|string> $tableNames Non-empty array.
      *
      * @throws InvalidArgumentException
      *
@@ -45,7 +45,7 @@ interface QuoterInterface
      *
      * @param string $name The full name of the table.
      *
-     * @return string[] The table name parts.
+     * @return array<string, string> The table name parts.
      */
     public function getTableNameParts(string $name): array;
 

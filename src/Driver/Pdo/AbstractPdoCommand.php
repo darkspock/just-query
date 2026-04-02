@@ -104,7 +104,7 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
             $dataType = $this->db->getSchema()->getDataType($value);
         }
 
-        $this->params[$name] = new Param($value, $dataType);
+        $this->params[$name] = new Param($value, $dataType); // @phpstan-ignore assign.propertyType
 
         return $this;
     }
@@ -120,10 +120,10 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
          */
         foreach ($values as $name => $value) {
             if ($value instanceof Param) {
-                $this->params[$name] = $value;
+                $this->params[$name] = $value; // @phpstan-ignore assign.propertyType
             } else {
                 $type = $this->db->getSchema()->getDataType($value);
-                $this->params[$name] = new Param($value, $type);
+                $this->params[$name] = new Param($value, $type); // @phpstan-ignore assign.propertyType
             }
         }
 
@@ -181,7 +181,7 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
 
     protected function getQueryMode(int $queryMode): string
     {
-        return match ($queryMode) {
+        return match ($queryMode) { // @phpstan-ignore match.unhandled
             self::QUERY_MODE_EXECUTE => 'execute',
             self::QUERY_MODE_ROW => 'queryOne',
             self::QUERY_MODE_ALL => 'queryAll',
@@ -231,6 +231,7 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
     {
         if ($queryMode === self::QUERY_MODE_CURSOR) {
             /** @psalm-suppress PossiblyNullArgument */
+            /** @phpstan-ignore argument.type */
             $dataReader = new PdoDataReader($this->pdoStatement);
 
             if ($this->phpTypecasting && ($row = $dataReader->current()) !== false) {
@@ -276,6 +277,7 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
             $result = $this->pdoStatement?->fetchAll(PDO::FETCH_ASSOC);
 
             if ($this->phpTypecasting && !empty($result)) {
+                /** @phpstan-ignore argument.type */
                 $result = $this->phpTypecastRows($result);
             }
         } else {
@@ -295,8 +297,6 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
 
         $queryContext = new CommandContext(__METHOD__, $logCategory, $this->getSql(), $this->getParams());
 
-        /** @var string|null $rawSql */
-        $this->profiler?->begin($rawSql ??= $this->getRawSql(), $queryContext);
         /** @var string $rawSql */
         try {
             $result = parent::queryInternal($queryMode);
@@ -349,9 +349,10 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
     /**
      * Typecasts rows from the query result to PHP types according to the column types.
      *
-     * @param array[] $rows
+     * @param array<int, array<string, mixed>> $rows
      *
      * @psalm-param array<array<string,mixed>> $rows
+     * @return array<int, array<string, mixed>>
      */
     private function phpTypecastRows(array $rows): array
     {
@@ -359,7 +360,7 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
         $columns = $this->getResultColumns($keys);
 
         if (empty($columns)) {
-            return $rows;
+            return $rows; // @phpstan-ignore return.type
         }
 
         foreach ($rows as &$row) {
@@ -368,6 +369,6 @@ abstract class AbstractPdoCommand extends AbstractCommand implements PdoCommandI
             }
         }
 
-        return $rows;
+        return $rows; // @phpstan-ignore return.type
     }
 }

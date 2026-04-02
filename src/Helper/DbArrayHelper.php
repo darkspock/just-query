@@ -90,14 +90,14 @@ final class DbArrayHelper
      * ]
      * ```
      *
-     * @param array[] $rows The array of rows that needs to be arranged.
-     * @param string[] $arrangeBy The array of keys that will be used to arrange the input array by one or more keys.
+     * @param array<array<string, mixed>> $rows The array of rows that needs to be arranged.
+     * @param list<string> $arrangeBy The array of keys that will be used to arrange the input array by one or more keys.
      * @param Closure|string|null $indexBy The column name or anonymous function which result will be used to index the
      * array.
      * @param Closure|null $resultCallback The callback function that will be called with the result array. This can be
      * used to modify the result before returning it.
      *
-     * @return array[]|object[] The arranged array.
+     * @return array<array<string, mixed>|object> The arranged array.
      *
      * @psalm-param list<array<string,mixed>> $rows
      * @psalm-param IndexBy|null $indexBy
@@ -117,32 +117,34 @@ final class DbArrayHelper
             return self::index($rows, $indexBy, $resultCallback);
         }
 
+        /** @var array<array-key, mixed> $arranged */
         $arranged = [];
 
         foreach ($rows as $element) {
             $lastArray = &$arranged;
 
             foreach ($arrangeBy as $group) {
-                $value = (string) $element[$group];
+                $value = (string) ($element[$group] ?? ''); // @phpstan-ignore cast.string
 
-                if (!isset($lastArray[$value])) {
-                    $lastArray[$value] = [];
+                if (!isset($lastArray[$value])) { // @phpstan-ignore offsetAccess.nonOffsetAccessible
+                    $lastArray[$value] = []; // @phpstan-ignore offsetAccess.nonOffsetAccessible
                 }
 
                 $lastArray = &$lastArray[$value];
             }
 
             /** @psalm-suppress MixedArrayAssignment */
-            $lastArray[] = $element;
+            $lastArray[] = $element; // @phpstan-ignore offsetAccess.nonOffsetAccessible
 
             unset($lastArray);
         }
 
-        /** @var array[] $arranged */
+        /** @var array<array-key, mixed> $arranged */
         if ($indexBy !== null || $resultCallback !== null) {
             self::indexArranged($arranged, $indexBy, $resultCallback, count($arrangeBy));
         }
 
+        /** @var array<array<string, mixed>|object> */
         return $arranged;
     }
 
@@ -170,13 +172,13 @@ final class DbArrayHelper
      * ]
      * ```
      *
-     * @param array[] $rows The array of rows that needs to be indexed.
+     * @param array<array<string, mixed>> $rows The array of rows that needs to be indexed.
      * @param Closure|string|null $indexBy The column name or anonymous function which result will be used to index the
      * array.
      * @param Closure|null $resultCallback The callback function that will be called with the result array. This can be
      * used to modify the result before returning it.
      *
-     * @return array[]|object[] The indexed array.
+     * @return array<array<string, mixed>|object> The indexed array.
      *
      * @psalm-param array<array<string,mixed>> $rows
      * @psalm-param IndexBy|null $indexBy
@@ -204,7 +206,10 @@ final class DbArrayHelper
             $rows = ($resultCallback)($rows);
         }
 
-        /** @psalm-suppress MixedArgument */
+        /**
+         * @psalm-suppress MixedArgument
+         * @phpstan-var array<int|string> $indexes
+         */
         return !empty($indexes) ? array_combine($indexes, $rows) : $rows;
     }
 
@@ -215,7 +220,7 @@ final class DbArrayHelper
      *
      * Note that an empty array won't be considered associative.
      *
-     * @param array $array The array being checked.
+     * @param array<array-key, mixed> $array The array being checked.
      *
      * @return bool Whether the array is associative.
      */
@@ -273,9 +278,9 @@ final class DbArrayHelper
     /**
      * Converts an object into an array.
      *
-     * @param array|object $object The object to be converted into an array.
+     * @param array<array-key, mixed>|object $object The object to be converted into an array.
      *
-     * @return array The array representation of the object.
+     * @return array<array-key, mixed> The array representation of the object.
      */
     public static function toArray(array|object $object): array
     {
@@ -284,7 +289,7 @@ final class DbArrayHelper
         }
 
         if ($object instanceof JsonSerializable) {
-            /** @var array */
+            /** @var array<array-key, mixed> */
             return $object->jsonSerialize();
         }
 
@@ -298,12 +303,12 @@ final class DbArrayHelper
     /**
      * Normalizes raw input into an array of expression values.
      *
-     * @param array|ExpressionInterface|string $raw Raw input to be normalized. It can be:
+     * @param array<array-key, mixed>|ExpressionInterface|string $raw Raw input to be normalized. It can be:
      *  - an array of expression values;
      *  - a single expression object;
      *  - a string with comma-separated expression values.
      *
-     * @return array An array of normalized expressions.
+     * @return array<array-key, mixed> An array of normalized expressions.
      *
      * @psalm-template TArray as array
      * @psalm-template TExpression as ExpressionInterface
@@ -319,7 +324,7 @@ final class DbArrayHelper
          */
         return match (gettype($raw)) {
             GettypeResult::ARRAY => $raw,
-            GettypeResult::STRING => preg_split('/\s*,\s*/', trim($raw), -1, PREG_SPLIT_NO_EMPTY),
+            GettypeResult::STRING => preg_split('/\s*,\s*/', trim($raw), -1, PREG_SPLIT_NO_EMPTY) ?: [],
             default => [$raw],
         };
     }
@@ -327,7 +332,9 @@ final class DbArrayHelper
     /**
      * Recursively indexes the arranged array.
      *
-     * @psalm-assert array[]|object[] $arranged
+     * @param array<array-key, mixed> $arranged
+     * @param Closure|string|null $indexBy
+     * @psalm-assert array<int|string, mixed>[] $arranged
      * @psalm-param IndexBy|null $indexBy
      * @psalm-param ResultCallback|null $resultCallback
      */
@@ -340,7 +347,7 @@ final class DbArrayHelper
         /** @psalm-var list<array<string,mixed>> $rows */
         foreach ($arranged as &$rows) {
             if ($depth > 1) {
-                self::indexArranged($rows, $indexBy, $resultCallback, $depth - 1);
+                self::indexArranged($rows, $indexBy, $resultCallback, $depth - 1); // @phpstan-ignore staticMethod.alreadyNarrowedType
             } else {
                 $rows = self::index($rows, $indexBy, $resultCallback);
             }

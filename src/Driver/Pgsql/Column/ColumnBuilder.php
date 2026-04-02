@@ -60,7 +60,7 @@ final class ColumnBuilder extends \FastPHP\QueryBuilder\Schema\Column\ColumnBuil
 
     public static function array(?ColumnInterface $column = null): ArrayColumn
     {
-        return new ArrayColumn(ColumnType::ARRAY, column: $column);
+        return new ArrayColumn(ColumnType::ARRAY, column: $column); // @phpstan-ignore argument.type
     }
 
     public static function structured(?string $dbType = null, array $columns = []): StructuredColumn

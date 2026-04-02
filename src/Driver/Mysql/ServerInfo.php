@@ -15,10 +15,11 @@ final class ServerInfo extends PdoServerInfo
     {
         /** @psalm-suppress TypeDoesNotContainType */
         if (!isset($this->timezone) || $refresh) {
-            /** @var string */
-            $this->timezone = $this->db->createCommand(
+            /** @var string $timezone */
+            $timezone = $this->db->createCommand(
                 "SELECT LPAD(TIME_FORMAT(TIMEDIFF(NOW(), UTC_TIMESTAMP), '%H:%i'), 6, '+')",
             )->queryScalar();
+            $this->timezone = $timezone;
         }
 
         return $this->timezone;

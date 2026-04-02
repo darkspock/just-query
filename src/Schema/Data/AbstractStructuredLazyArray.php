@@ -25,7 +25,7 @@ abstract class AbstractStructuredLazyArray implements ArrayAccess, Countable, Js
     use LazyArrayTrait;
 
     /**
-     * @var array|string The structured array value.
+     * @var array<string, mixed>|string The structured array value.
      */
     private array|string $value;
 
@@ -48,13 +48,15 @@ abstract class AbstractStructuredLazyArray implements ArrayAccess, Countable, Js
      *
      * @param string $value The string retrieved value from the database that can be parsed into an array.
      *
-     * @return array|null The parsed array or `null` if the string value cannot be parsed.
+     * @return array<string, mixed>|null The parsed array or `null` if the string value cannot be parsed.
      */
     abstract protected function parse(string $value): ?array;
 
     /**
      * Typecasts the structured values to PHP types according to the column schemas information.
      *
+     * @param array<string, mixed> $value
+     * @return array<string, mixed>
      * @psalm-suppress MixedArrayTypeCoercion
      */
     protected function phpTypecast(array $value): array
@@ -67,7 +69,7 @@ abstract class AbstractStructuredLazyArray implements ArrayAccess, Countable, Js
         $columnNames = array_keys($this->columns);
 
         foreach ($value as $columnName => $item) {
-            $columnName = $columnNames[$columnName] ?? $columnName;
+            $columnName = $columnNames[$columnName] ?? $columnName; // @phpstan-ignore nullCoalesce.offset
 
             if (isset($this->columns[$columnName])) {
                 $fields[$columnName] = $this->columns[$columnName]->phpTypecast($item);
@@ -83,6 +85,7 @@ abstract class AbstractStructuredLazyArray implements ArrayAccess, Countable, Js
      * Prepares the value to be used as an array or throws an exception if it's impossible.
      *
      * @psalm-assert array $this->value
+     * @phpstan-assert array<string, mixed> $this->value
      */
     protected function prepareValue(): void
     {

@@ -39,6 +39,7 @@ class InBuilder implements ExpressionBuilderInterface
      * Build SQL for {@see In} or {@see NotIn}.
      *
      * @param In|NotIn $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -64,12 +65,12 @@ class InBuilder implements ExpressionBuilderInterface
         }
 
         if ($values instanceof QueryInterface) {
-            return $this->buildSubqueryInCondition($operator, $column, $values, $params);
+            return $this->buildSubqueryInCondition($operator, $column, $values, $params); // @phpstan-ignore argument.type
         }
 
         if (is_array($column)) {
             if (count($column) > 1) {
-                return $this->buildCompositeInCondition($operator, $column, $values, $params);
+                return $this->buildCompositeInCondition($operator, $column, $values, $params); // @phpstan-ignore argument.type
             }
             $column = reset($column);
             if ($column instanceof ExpressionInterface) {
@@ -84,17 +85,17 @@ class InBuilder implements ExpressionBuilderInterface
         $nullCondition = null;
         $nullConditionOperator = null;
         if (in_array(null, $rawValues, true)) {
-            $nullCondition = $this->getNullCondition($operator, $column);
+            $nullCondition = $this->getNullCondition($operator, $column); // @phpstan-ignore argument.type
             $nullConditionOperator = $operator === 'IN' ? 'OR' : 'AND';
         }
 
-        $sqlValues = $this->buildValues($column, $values, $params);
+        $sqlValues = $this->buildValues($column, $values, $params); // @phpstan-ignore argument.type
 
         if (empty($sqlValues)) {
             return $nullCondition ?? ($operator === 'IN' ? '0=1' : '');
         }
 
-        $column = $this->queryBuilder->getQuoter()->quoteColumnName($column);
+        $column = $this->queryBuilder->getQuoter()->quoteColumnName($column); // @phpstan-ignore argument.type
 
         if (count($sqlValues) > 1) {
             $sql = "$column $operator (" . implode(', ', $sqlValues) . ')';
@@ -103,6 +104,7 @@ class InBuilder implements ExpressionBuilderInterface
             $sql = $column . $operator . reset($sqlValues);
         }
 
+        /** @phpstan-ignore notIdentical.alwaysTrue */
         return $nullCondition !== null && $nullConditionOperator !== null
             ? sprintf('%s %s %s', $sql, $nullConditionOperator, $nullCondition)
             : $sql;
@@ -110,6 +112,9 @@ class InBuilder implements ExpressionBuilderInterface
 
     /**
      * Builds `$values` to use in condition.
+     *
+     * @param iterable<mixed> $values
+     * @param array<int|string, mixed> $params
      *
      * @throws InvalidArgumentException
      *
@@ -137,6 +142,8 @@ class InBuilder implements ExpressionBuilderInterface
     /**
      * Build SQL for composite `IN` condition.
      *
+     * @param array<int|string, mixed> $params
+     *
      * @throws NotSupportedException
      *
      * @psalm-param array<string|ExpressionInterface>|string $columns
@@ -148,6 +155,7 @@ class InBuilder implements ExpressionBuilderInterface
         array &$params = [],
     ): string {
         $query = '';
+        /** @phpstan-ignore argument.type */
         $sql = $this->queryBuilder->buildExpression($values, $params);
 
         if (is_array($columns)) {
@@ -172,6 +180,10 @@ class InBuilder implements ExpressionBuilderInterface
 
     /**
      * Builds an SQL statement for checking the existence of rows with the specified composite column values.
+     *
+     * @param array<int|string, mixed> $columns
+     * @param iterable<mixed>|Iterator<mixed> $values
+     * @param array<int|string, mixed> $params
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -234,6 +246,10 @@ class InBuilder implements ExpressionBuilderInterface
         return sprintf('%s IS NOT NULL', $column);
     }
 
+    /**
+     * @param Traversable<mixed> $traversableObject
+     * @return array<int|string, mixed>
+     */
     protected function getRawValuesFromTraversableObject(Traversable $traversableObject): array
     {
         $rawValues = [];

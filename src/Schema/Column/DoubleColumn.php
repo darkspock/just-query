@@ -36,7 +36,7 @@ class DoubleColumn extends AbstractColumn
                     ? null
                     : (is_int($value->value) ? $value->value : (float) $value->value),
                 $value instanceof DateTimeInterface => (float) $value->format('U.u'),
-                $value instanceof Stringable => ($val = (string) $value) === '' ? null : (float) $val,
+                $value instanceof Stringable => ($val = (string) $value) === '' ? null : (float) $val, // @phpstan-ignore cast.double
                 default => $this->throwWrongTypeException($value::class),
             },
             default => $this->throwWrongTypeException(gettype($value)),
@@ -49,6 +49,6 @@ class DoubleColumn extends AbstractColumn
             return null;
         }
 
-        return (float) $value;
+        return (float) $value; // @phpstan-ignore cast.double
     }
 }

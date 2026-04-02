@@ -1,4 +1,4 @@
-.PHONY: up down test test-unit test-integration test-mysql test-pgsql
+.PHONY: up down test test-unit test-integration test-mysql test-pgsql phpstan
 
 up:
 	docker compose up -d --wait
@@ -20,3 +20,6 @@ test-mysql: up
 
 test-pgsql: up
 	vendor/bin/phpunit tests/Integration/Pgsql
+
+phpstan:
+	vendor/bin/phpstan analyse --memory-limit=512M

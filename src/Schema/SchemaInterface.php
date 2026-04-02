@@ -68,7 +68,7 @@ interface SchemaInterface extends ConstraintSchemaInterface
     /**
      * Returns the column instance for the column metadata received from the query result.
      *
-     * @param array $metadata The column metadata from the query result.
+     * @param array<string, mixed> $metadata The column metadata from the query result.
      */
     public function getResultColumn(array $metadata): ?ColumnInterface;
 
@@ -78,7 +78,7 @@ interface SchemaInterface extends ConstraintSchemaInterface
      * @param bool $refresh Whether to fetch the latest available schema names. If this is `false`, schema names fetched
      * before (if available) will be returned.
      *
-     * @return string[] All schemas name in the database, except system schemas.
+     * @return array<int, string> All schemas name in the database, except system schemas.
      */
     public function getSchemaNames(bool $refresh = false): array;
 
@@ -91,7 +91,7 @@ interface SchemaInterface extends ConstraintSchemaInterface
      * @param bool $refresh Whether to fetch the latest available table names. If this is `false`, table names fetched
      * before (if available) will be returned.
      *
-     * @return string[] All tables name in the database.
+     * @return array<int, string> All tables name in the database.
      */
     public function getTableNames(string $schema = '', bool $refresh = false): array;
 
@@ -114,7 +114,7 @@ interface SchemaInterface extends ConstraintSchemaInterface
      * @param bool $refresh Whether to fetch the latest available table schemas. If this is `false`, cached data may be
      * returned if available.
      *
-     * @return TableSchemaInterface[] The metadata for all tables in the database.
+     * @return array<string, TableSchemaInterface> The metadata for all tables in the database.
      */
     public function getTableSchemas(string $schema = '', bool $refresh = false): array;
 
@@ -151,7 +151,7 @@ interface SchemaInterface extends ConstraintSchemaInterface
      * @param bool $refresh Whether to fetch the latest available view names. If this is false, view names fetched
      * before (if available) will be returned.
      *
-     * @return string[] All view names in the database.
+     * @return array<int, string> All view names in the database.
      */
     public function getViewNames(string $schema = '', bool $refresh = false): array;
 

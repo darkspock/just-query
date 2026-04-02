@@ -250,7 +250,7 @@ class ColumnBuilder
      */
     public static function array(?ColumnInterface $column = null): ColumnInterface
     {
-        return new ArrayColumn(ColumnType::ARRAY, column: $column);
+        return new ArrayColumn(ColumnType::ARRAY, column: $column); // @phpstan-ignore argument.type
     }
 
     /**
@@ -282,6 +282,6 @@ class ColumnBuilder
      */
     public static function enum(?array $values = null, ?string $dbType = null): EnumColumn
     {
-        return new EnumColumn(dbType: $dbType, values: $values);
+        return new EnumColumn(dbType: $dbType, values: $values); // @phpstan-ignore argument.type
     }
 }

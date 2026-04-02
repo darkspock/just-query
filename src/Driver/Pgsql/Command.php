@@ -12,12 +12,16 @@ use FastPHP\QueryBuilder\Driver\Pdo\AbstractPdoCommand;
  */
 final class Command extends AbstractPdoCommand
 {
+    /**
+     * @return array<int, string>
+     */
     public function showDatabases(): array
     {
         $sql = <<<SQL
         SELECT datname FROM pg_database WHERE datistemplate = false AND datname NOT IN ('postgres', 'template0', 'template1')
         SQL;
 
+        /** @var array<int, string> */
         return $this->setSql($sql)->queryColumn();
     }
 }

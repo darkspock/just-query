@@ -24,6 +24,7 @@ class ExistsBuilder implements ExpressionBuilderInterface
      * Build SQL for {@see Exists} or {@see NotExists}.
      *
      * @param Exists|NotExists $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws NotSupportedException
      */
@@ -34,6 +35,7 @@ class ExistsBuilder implements ExpressionBuilderInterface
             NotExists::class => 'NOT EXISTS',
         };
 
+        /** @phpstan-ignore argument.type */
         $sql = $this->queryBuilder->buildExpression($expression->query, $params);
 
         return "$operator $sql";

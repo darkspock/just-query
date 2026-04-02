@@ -18,7 +18,7 @@ use function is_string;
 final class Not implements ConditionInterface
 {
     /**
-     * @param array|ExpressionInterface|string|null $condition The condition to negate.
+     * @param array<int|string, mixed>|ExpressionInterface|string|null $condition The condition to negate.
      */
     public function __construct(
         public readonly ExpressionInterface|array|string|null $condition,
@@ -37,6 +37,8 @@ final class Not implements ConditionInterface
     /**
      * Validate the given condition have at least 1 condition and to be `array`, `string`, `null` or `ExpressionInterface`.
      *
+     * @param array<int|string, mixed> $condition
+     * @return array<int|string, mixed>|ExpressionInterface|string|null
      * @throws InvalidArgumentException If the number of operands isn't 1.
      */
     private static function validateCondition(string $operator, array $condition): ExpressionInterface|array|string|null

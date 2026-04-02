@@ -32,6 +32,7 @@ final class LogicalBuilder implements ExpressionBuilderInterface
      * Build SQL for {@see AndX} or {@see OrX}.
      *
      * @param AndX|OrX $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
@@ -57,23 +58,26 @@ final class LogicalBuilder implements ExpressionBuilderInterface
     }
 
     /**
+     * @param array<int, mixed> $expressions
+     * @param array<int|string, mixed> $params
+     *
      * @throws InvalidArgumentException
      * @throws NotSupportedException
      *
      * @psalm-param array<array|ExpressionInterface|scalar> $expressions
      * @psalm-return list<scalar>
      */
-    private function buildExpressions(array $expressions, array &$params = []): array
+    private function buildExpressions(array $expressions, array &$params = []): array // @phpstan-ignore missingType.iterableValue
     {
         $parts = [];
 
         foreach ($expressions as $conditionValue) {
             if (is_array($conditionValue)) {
-                $conditionValue = $this->queryBuilder->buildCondition($conditionValue, $params);
+                $conditionValue = $this->queryBuilder->buildCondition($conditionValue, $params); // @phpstan-ignore argument.type, argument.type
             }
 
             if ($conditionValue instanceof ExpressionInterface) {
-                $conditionValue = $this->queryBuilder->buildExpression($conditionValue, $params);
+                $conditionValue = $this->queryBuilder->buildExpression($conditionValue, $params); // @phpstan-ignore argument.type
             }
 
             if ($conditionValue !== '') {

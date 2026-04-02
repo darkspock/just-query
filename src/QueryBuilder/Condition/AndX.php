@@ -12,12 +12,13 @@ use FastPHP\QueryBuilder\Expression\ExpressionInterface;
 final class AndX implements ConditionInterface
 {
     /**
+     * @var array<int, array<int|string, mixed>|bool|ExpressionInterface|float|int|string>
      * @psalm-var array<array|ExpressionInterface|scalar>
      */
-    public readonly array $expressions;
+    public readonly array $expressions; // @phpstan-ignore missingType.iterableValue
 
     /**
-     * @param array|bool|ExpressionInterface|float|int|string ...$expressions The expressions that are connected by this condition.
+     * @param array<int|string, mixed>|bool|ExpressionInterface|float|int|string ...$expressions The expressions that are connected by this condition.
      */
     public function __construct(
         array|ExpressionInterface|int|float|bool|string ...$expressions,
@@ -27,7 +28,6 @@ final class AndX implements ConditionInterface
 
     public static function fromArrayDefinition(string $operator, array $operands): self
     {
-        /** @psalm-var array<array|ExpressionInterface|scalar> $operands */
-        return new self(...$operands);
+        return new self(...$operands); // @phpstan-ignore argument.type
     }
 }

@@ -35,7 +35,7 @@ final class ArrayMergeBuilder extends MultiOperandFunctionBuilder
      * Builds a SQL expression which merges arrays from the given {@see ArrayMerge} object.
      *
      * @param ArrayMerge $expression The expression to build.
-     * @param array $params The parameters to bind.
+     * @param array<int|string, mixed> $params The parameters to bind.
      *
      * @return string The SQL expression.
      */

@@ -38,7 +38,7 @@ final class BitColumnInternal
             'NULL' => null,
             'boolean' => self::addZero($value ? '1' : '0', $size),
             'string' => $value === '' ? null : $value,
-            default => $value instanceof ExpressionInterface ? $value : (string) $value,
+            default => $value instanceof ExpressionInterface ? $value : (string) $value, // @phpstan-ignore cast.string
         };
     }
 

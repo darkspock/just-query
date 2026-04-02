@@ -8,8 +8,9 @@ use FastPHP\QueryBuilder\Schema\Data\AbstractStructuredLazyArray;
 
 final class StructuredLazyArray extends AbstractStructuredLazyArray
 {
-    protected function parse(string $value): ?array
+    /** @return array<string, mixed>|null */
+    protected function parse(string $value): ?array // @phpstan-ignore return.unusedType
     {
-        return (new StructuredParser())->parse($value);
+        return (new StructuredParser())->parse($value); // @phpstan-ignore return.type
     }
 }

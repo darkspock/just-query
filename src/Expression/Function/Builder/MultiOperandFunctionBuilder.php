@@ -27,7 +27,7 @@ abstract class MultiOperandFunctionBuilder implements ExpressionBuilderInterface
      * Builds a SQL multi-operand function expression from the given {@see MultiOperandFunction} instance.
      *
      * @param MultiOperandFunction $expression The expression to build.
-     * @param array $params The parameters to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters to be bound to the query.
      *
      * @psalm-param T $expression
      *
@@ -54,7 +54,7 @@ abstract class MultiOperandFunctionBuilder implements ExpressionBuilderInterface
      * Builds a SQL multi-operand function expression from the given {@see MultiOperandFunction} instance.
      *
      * @param MultiOperandFunction $expression The expression to build from.
-     * @param array $params The parameters to be bound to the query.
+     * @param array<int|string, mixed> $params The parameters to be bound to the query.
      *
      * @psalm-param T $expression
      *
@@ -64,6 +64,8 @@ abstract class MultiOperandFunctionBuilder implements ExpressionBuilderInterface
 
     /**
      * Builds an operand expression of the multi-operand function.
+     *
+     * @param array<int|string, mixed> $params
      */
     protected function buildOperand(mixed $operand, array &$params): string
     {

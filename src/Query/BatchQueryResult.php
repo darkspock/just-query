@@ -19,7 +19,7 @@ final class BatchQueryResult implements BatchQueryResultInterface
     private int $batchSize = 100;
     private int $index = -1;
     /**
-     * @var array The data retrieved in the current batch.
+     * @var array<int, array<string, mixed>> The data retrieved in the current batch.
      */
     private array $batch = [];
     /**
@@ -28,6 +28,7 @@ final class BatchQueryResult implements BatchQueryResultInterface
     private ?DataReaderInterface $dataReader = null;
 
     /**
+     * @var Closure|string|null
      * @psalm-var IndexBy|null $indexBy
      */
     private Closure|string|null $indexBy = null;
@@ -47,13 +48,13 @@ final class BatchQueryResult implements BatchQueryResultInterface
         }
 
         $this->dataReader = null;
-        $this->batch = $this->fetchData();
+        $this->batch = $this->fetchData(); // @phpstan-ignore assign.propertyType
         $this->index = 0;
     }
 
     public function next(): void
     {
-        $this->batch = $this->fetchData();
+        $this->batch = $this->fetchData(); // @phpstan-ignore assign.propertyType
         ++$this->index;
     }
 
@@ -66,6 +67,9 @@ final class BatchQueryResult implements BatchQueryResultInterface
         return $this->index;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function current(): array
     {
         if ($this->index === -1) {
@@ -101,6 +105,9 @@ final class BatchQueryResult implements BatchQueryResultInterface
         return $this;
     }
 
+    /**
+     * @param Closure|string|null $indexBy
+     */
     public function indexBy(Closure|string|null $indexBy): static
     {
         $this->indexBy = $indexBy;
@@ -135,6 +142,7 @@ final class BatchQueryResult implements BatchQueryResultInterface
     /**
      * Reads and collects rows for batch.
      *
+     * @return array<array<string,mixed>>
      * @psalm-return array<array<string,mixed>>
      */
     private function getRows(): array
@@ -153,8 +161,9 @@ final class BatchQueryResult implements BatchQueryResultInterface
         ) {
             /** @var int|string $key */
             $key = $isContinuousIndex ? $startIndex - $leftCount : $this->dataReader->key();
-            /** @psalm-var array<string, mixed> */
-            $rows[$key] = $this->dataReader->current();
+            /** @var array<string, mixed> $currentRow */
+            $currentRow = $this->dataReader->current();
+            $rows[$key] = $currentRow;
         }
 
         return $rows;

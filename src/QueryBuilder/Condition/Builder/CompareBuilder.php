@@ -32,6 +32,7 @@ class CompareBuilder implements ExpressionBuilderInterface
      * Build SQL for comparison conditions.
      *
      * @param Equals|GreaterThan|GreaterThanOrEqual|LessThan|LessThanOrEqual|NotEquals $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws NotSupportedException
      */
@@ -54,17 +55,23 @@ class CompareBuilder implements ExpressionBuilderInterface
     }
 
     /**
+     * @param array<int|string, mixed> $params
+     *
      * @throws NotSupportedException
      */
     private function prepareColumn(string|ExpressionInterface $column, array &$params): string
     {
         if ($column instanceof ExpressionInterface) {
+            /** @phpstan-ignore argument.type */
             return $this->queryBuilder->buildExpression($column, $params);
         }
 
         return $this->queryBuilder->getQuoter()->quoteColumnName($column);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     private function prepareValue(mixed $value, array &$params): ?string
     {
         if ($value === null) {
@@ -76,6 +83,7 @@ class CompareBuilder implements ExpressionBuilderInterface
 
     private function getOperator(AbstractCompare $expression): string
     {
+        /** @phpstan-ignore match.unhandled */
         return match ($expression::class) {
             Equals::class => '=',
             NotEquals::class => '<>',

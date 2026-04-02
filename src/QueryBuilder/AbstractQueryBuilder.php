@@ -185,12 +185,12 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
 
     public function buildCondition(array|string|ExpressionInterface|null $condition, array &$params = []): string
     {
-        return $this->dqlBuilder->buildCondition($condition, $params);
+        return $this->dqlBuilder->buildCondition($condition, $params); // @phpstan-ignore parameterByRef.type
     }
 
     public function buildExpression(ExpressionInterface $expression, array &$params = []): string
     {
-        return $this->dqlBuilder->buildExpression($expression, $params);
+        return $this->dqlBuilder->buildExpression($expression, $params); // @phpstan-ignore parameterByRef.type
     }
 
     public function buildFor(array $values): string
@@ -200,19 +200,23 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
 
     public function buildFrom(array $tables, array &$params): string
     {
-        return $this->dqlBuilder->buildFrom($tables, $params);
+        return $this->dqlBuilder->buildFrom($tables, $params); // @phpstan-ignore parameterByRef.type
     }
 
     public function buildGroupBy(array $columns, array &$params = []): string
     {
-        return $this->dqlBuilder->buildGroupBy($columns, $params);
+        return $this->dqlBuilder->buildGroupBy($columns, $params); // @phpstan-ignore parameterByRef.type
     }
 
     public function buildHaving(array|ExpressionInterface|string|null $condition, array &$params = []): string
     {
-        return $this->dqlBuilder->buildHaving($condition, $params);
+        return $this->dqlBuilder->buildHaving($condition, $params); // @phpstan-ignore parameterByRef.type
     }
 
+    /**
+     * @param array<int, mixed> $joins
+     * @param array<int|string, mixed> $params
+     */
     public function buildJoin(array $joins, array &$params): string
     {
         return $this->dqlBuilder->buildJoin($joins, $params);
@@ -238,6 +242,9 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
         return $this->dqlBuilder->buildOrderByAndLimit($sql, $orderBy, $limit, $offset, $params);
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function buildSelect(
         array $columns,
         array &$params,
@@ -258,29 +265,29 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
         return match (gettype($value)) {
             GettypeResult::ARRAY => $this->buildExpression(
                 array_is_list($value) ? new ArrayValue($value) : new JsonValue($value),
-                $params,
+                $params, // @phpstan-ignore argument.type
             ),
             GettypeResult::BOOLEAN => $value ? static::TRUE_VALUE : static::FALSE_VALUE,
             GettypeResult::DOUBLE => (string) $value,
             GettypeResult::INTEGER => (string) $value,
             GettypeResult::NULL => 'NULL',
             GettypeResult::OBJECT => match (true) {
-                $value instanceof Param => $this->bindParam($value, $params),
-                $value instanceof ExpressionInterface => $this->buildExpression($value, $params),
-                $value instanceof StringableStream => $this->bindParam(new Param($value->getValue(), DataType::LOB), $params),
-                $value instanceof Stringable => $this->bindParam(new Param((string) $value, DataType::STRING), $params),
+                $value instanceof Param => $this->bindParam($value, $params), // @phpstan-ignore argument.type
+                $value instanceof ExpressionInterface => $this->buildExpression($value, $params), // @phpstan-ignore argument.type
+                $value instanceof StringableStream => $this->bindParam(new Param($value->getValue(), DataType::LOB), $params), // @phpstan-ignore argument.type
+                $value instanceof Stringable => $this->bindParam(new Param((string) $value, DataType::STRING), $params), // @phpstan-ignore argument.type
                 $value instanceof BackedEnum => is_string($value->value)
-                    ? $this->bindParam(new Param($value->value, DataType::STRING), $params)
+                    ? $this->bindParam(new Param($value->value, DataType::STRING), $params) // @phpstan-ignore argument.type
                     : (string) $value->value,
-                $value instanceof Iterator && $value->key() === 0 => $this->buildExpression(new ArrayValue($value), $params),
-                $value instanceof Traversable => $this->buildExpression(new JsonValue($value), $params),
-                $value instanceof JsonSerializable => $this->buildExpression(new JsonValue($value), $params),
-                default => $this->bindParam($value, $params),
+                $value instanceof Iterator && $value->key() === 0 => $this->buildExpression(new ArrayValue($value), $params), // @phpstan-ignore argument.type
+                $value instanceof Traversable => $this->buildExpression(new JsonValue($value), $params), // @phpstan-ignore argument.type
+                $value instanceof JsonSerializable => $this->buildExpression(new JsonValue($value), $params), // @phpstan-ignore argument.type
+                default => $this->bindParam($value, $params), // @phpstan-ignore argument.type
             },
-            GettypeResult::RESOURCE => $this->bindParam(new Param($value, DataType::LOB), $params),
+            GettypeResult::RESOURCE => $this->bindParam(new Param($value, DataType::LOB), $params), // @phpstan-ignore argument.type
             GettypeResult::RESOURCE_CLOSED => throw new InvalidArgumentException('Resource is closed.'),
-            GettypeResult::STRING => $this->bindParam(new Param($value, DataType::STRING), $params),
-            default => $this->bindParam($value, $params),
+            GettypeResult::STRING => $this->bindParam(new Param($value, DataType::STRING), $params), // @phpstan-ignore argument.type
+            default => $this->bindParam($value, $params), // @phpstan-ignore argument.type
         };
     }
 
@@ -288,7 +295,7 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
         array|string|ConditionInterface|ExpressionInterface|null $condition,
         array &$params = [],
     ): string {
-        return $this->dqlBuilder->buildWhere($condition, $params);
+        return $this->dqlBuilder->buildWhere($condition, $params); // @phpstan-ignore parameterByRef.type
     }
 
     public function buildWithQueries(array $withQueries, array &$params): string
@@ -396,6 +403,9 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
         return $this->db->getColumnFactory();
     }
 
+    /**
+     * @return ExpressionBuilderInterface<ExpressionInterface>
+     */
     public function getExpressionBuilder(ExpressionInterface $expression): ExpressionBuilderInterface
     {
         return $this->dqlBuilder->getExpressionBuilder($expression);
@@ -406,6 +416,9 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
         return $this->db->getServerInfo();
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     public function insert(string $table, array|QueryInterface $columns, array &$params = []): string
     {
         return $this->dmlBuilder->insert($table, $columns, $params);
@@ -430,9 +443,11 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
     {
         return match ($param->type) {
             DataType::BOOLEAN => $param->value ? static::TRUE_VALUE : static::FALSE_VALUE,
+            /** @phpstan-ignore cast.int */
             DataType::INTEGER => (string) (int) $param->value,
             DataType::LOB => is_resource($value = $param->value)
                 ? $this->prepareResource($value)
+                /** @phpstan-ignore cast.string */
                 : $this->prepareBinary((string) $value),
             DataType::NULL => 'NULL',
             default => $this->prepareValue($param->value),
@@ -477,10 +492,11 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
                     $this->buildExpression(new JsonValue($value), $params),
                     array_map($this->prepareValue(...), $params),
                 ),
-                default => $this->db->getQuoter()->quoteValue((string) $value),
+                    default => $this->db->getQuoter()->quoteValue((string) $value), // @phpstan-ignore argument.type, cast.string
             },
             GettypeResult::RESOURCE => $this->prepareResource($value),
             GettypeResult::RESOURCE_CLOSED => throw new InvalidArgumentException('Resource is closed.'),
+            /** @phpstan-ignore cast.string */
             default => $this->db->getQuoter()->quoteValue((string) $value),
         };
     }
@@ -546,6 +562,9 @@ abstract class AbstractQueryBuilder implements QueryBuilderInterface
         $this->dqlBuilder->setConditionClasses($classes);
     }
 
+    /**
+     * @param array<class-string<ExpressionInterface>, class-string<ExpressionBuilderInterface<ExpressionInterface>>> $builders
+     */
     public function setExpressionBuilders(array $builders): void
     {
         $this->dqlBuilder->setExpressionBuilders($builders);

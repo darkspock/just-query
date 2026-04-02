@@ -98,7 +98,7 @@ final class ColumnDefinitionBuilder extends AbstractColumnDefinitionBuilder
 
         /** @psalm-suppress DocblockTypeContradiction */
         return match ($dbType) {
-            default => $dbType,
+            default => $dbType ?? '',
             null => match ($column->getType()) {
                 ColumnType::BOOLEAN => 'boolean',
                 ColumnType::BIT => 'varbit',
@@ -124,18 +124,18 @@ final class ColumnDefinitionBuilder extends AbstractColumnDefinitionBuilder
                 ColumnType::STRUCTURED => 'jsonb',
                 ColumnType::JSON => 'jsonb',
                 ColumnType::ENUM => 'varchar',
-                PgsqlColumnType::INT4RANGE => 'int4range',
-                PgsqlColumnType::INT8RANGE => 'int8range',
-                PgsqlColumnType::NUMRANGE => 'numrange',
-                PgsqlColumnType::TSRANGE => 'tsrange',
-                PgsqlColumnType::TSTZRANGE => 'tstzrange',
-                PgsqlColumnType::DATERANGE => 'daterange',
-                PgsqlColumnType::INT4MULTIRANGE => 'int4multirange',
-                PgsqlColumnType::INT8MULTIRANGE => 'int8multirange',
-                PgsqlColumnType::NUMMULTIRANGE => 'nummultirange',
-                PgsqlColumnType::TSMULTIRANGE => 'tsmultirange',
-                PgsqlColumnType::TSTZMULTIRANGE => 'tstzmultirange',
-                PgsqlColumnType::DATEMULTIRANGE => 'datemultirange',
+                PgsqlColumnType::INT4RANGE => 'int4range', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::INT8RANGE => 'int8range', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::NUMRANGE => 'numrange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::TSRANGE => 'tsrange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::TSTZRANGE => 'tstzrange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::DATERANGE => 'daterange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::INT4MULTIRANGE => 'int4multirange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::INT8MULTIRANGE => 'int8multirange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::NUMMULTIRANGE => 'nummultirange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::TSMULTIRANGE => 'tsmultirange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::TSTZMULTIRANGE => 'tstzmultirange', // @phpstan-ignore match.alwaysFalse
+                PgsqlColumnType::DATEMULTIRANGE => 'datemultirange', // @phpstan-ignore match.alwaysFalse
                 default => 'varchar',
             },
             'timestamp without time zone' => 'timestamp',

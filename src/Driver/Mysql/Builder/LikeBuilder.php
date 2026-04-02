@@ -12,6 +12,9 @@ use FastPHP\QueryBuilder\QueryBuilder\Condition\NotLike;
  */
 final class LikeBuilder extends \FastPHP\QueryBuilder\QueryBuilder\Condition\Builder\LikeBuilder
 {
+    /**
+     * @param array<int|string, mixed> $params
+     */
     protected function prepareColumn(Like|NotLike $condition, array &$params): string
     {
         $column = parent::prepareColumn($condition, $params);

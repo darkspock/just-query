@@ -162,7 +162,8 @@ abstract class AbstractPdoConnection extends AbstractConnection implements PdoCo
     public function getLastInsertId(?string $sequenceName = null): string
     {
         if ($this->pdo !== null) {
-            return $this->pdo->lastInsertID($sequenceName ?? null);
+            /** @var string */
+            return $this->pdo->lastInsertID($sequenceName ?? null) ?: '';
         }
 
         throw new InvalidCallException('DB Connection is not active.');

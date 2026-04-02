@@ -126,7 +126,6 @@ abstract class AbstractSqlParser
      */
     final protected function skipToAfterString(string $string): void
     {
-        /** @var int $pos */
         $pos = strpos($this->sql, $string, $this->position);
         $this->position = $pos + strlen($string);
     }

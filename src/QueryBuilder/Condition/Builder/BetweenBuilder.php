@@ -24,6 +24,7 @@ class BetweenBuilder implements ExpressionBuilderInterface
      * Build SQL for {@see Between} or {@see NotBetween}.
      *
      * @param Between|NotBetween $expression
+     * @param array<int|string, mixed> $params
      *
      * @throws NotSupportedException
      */
@@ -34,6 +35,7 @@ class BetweenBuilder implements ExpressionBuilderInterface
             NotBetween::class => 'NOT BETWEEN',
         };
         $column = $expression->column instanceof ExpressionInterface
+            /** @phpstan-ignore argument.type */
             ? $this->queryBuilder->buildExpression($expression->column, $params)
             : $this->queryBuilder->getQuoter()->quoteColumnName($expression->column);
 
@@ -46,14 +48,18 @@ class BetweenBuilder implements ExpressionBuilderInterface
     /**
      * Attaches `$value` to `$params` array and return placeholder.
      *
+     * @param array<int|string, mixed> $params
+     *
      * @throws NotSupportedException
      */
     protected function createPlaceholder(mixed $value, array &$params): string
     {
         if ($value instanceof ExpressionInterface) {
+            /** @phpstan-ignore argument.type */
             return $this->queryBuilder->buildExpression($value, $params);
         }
 
+        /** @phpstan-ignore argument.type */
         return $this->queryBuilder->bindParam($value, $params);
     }
 }

@@ -20,7 +20,7 @@ abstract class AbstractPdoSchema extends AbstractSchema
      *
      * @throws NotSupportedException If the connection is not a PDO connection.
      *
-     * @return array The cache key.
+     * @return array<int, string> The cache key.
      */
     protected function generateCacheKey(): array
     {
@@ -33,7 +33,10 @@ abstract class AbstractPdoSchema extends AbstractSchema
         return $cacheKey;
     }
 
-    protected function getCacheKey(string $name): array
+    /**
+     * @return array<int, string>
+     */
+    protected function getCacheKey(string $name): array // @phpstan-ignore method.childReturnType
     {
         return [static::class, ...$this->generateCacheKey(), $name];
     }

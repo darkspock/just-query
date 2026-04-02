@@ -38,6 +38,7 @@ final class ArrayValueBuilder extends AbstractArrayValueBuilder
 
         $typeHint = $this->getTypeHint($dbType, $column?->getDimension() ?? 1);
 
+        /** @phpstan-ignore argument.type */
         return $this->queryBuilder->bindParam($param, $params) . $typeHint;
     }
 
@@ -49,6 +50,9 @@ final class ArrayValueBuilder extends AbstractArrayValueBuilder
         return $this->buildNestedSubquery($query, $dbType, $column?->getDimension() ?? 1, $params);
     }
 
+    /**
+     * @param iterable<int|string, mixed> $value
+     */
     protected function buildValue(iterable $value, ArrayValue $expression, array &$params): string
     {
         $column = $this->getColumn($expression);
@@ -57,6 +61,9 @@ final class ArrayValueBuilder extends AbstractArrayValueBuilder
         return $this->buildNestedValue($value, $dbType, $column?->getColumn(), $column?->getDimension() ?? 1, $params);
     }
 
+    /**
+     * @return array<int|string, mixed>|string
+     */
     protected function getLazyArrayValue(LazyArrayInterface $value): array|string
     {
         if ($value instanceof LazyArray) {
@@ -76,13 +83,21 @@ final class ArrayValueBuilder extends AbstractArrayValueBuilder
         return 'ARRAY[' . implode(',', $placeholders) . ']' . $typeHint;
     }
 
+    /**
+     * @param array<int|string, mixed> $params
+     */
     private function buildNestedSubquery(QueryInterface $query, ?string $dbType, int $dimension, array &$params): string
     {
+        /** @phpstan-ignore argument.type */
         [$sql, $params] = $this->queryBuilder->build($query, $params);
 
         return "ARRAY($sql)" . $this->getTypeHint($dbType, $dimension);
     }
 
+    /**
+     * @param iterable<int|string, mixed> $value
+     * @param array<int|string, mixed> $params
+     */
     private function buildNestedValue(iterable $value, ?string &$dbType, ?ColumnInterface $column, int $dimension, array &$params): string
     {
         $placeholders = [];
@@ -90,14 +105,14 @@ final class ArrayValueBuilder extends AbstractArrayValueBuilder
         $isTypecastingEnabled = $column !== null && $queryBuilder->isTypecastingEnabled();
 
         if ($dimension > 1) {
-            /** @var iterable|null $item */
+            /** @var iterable<int|string, mixed>|null $item */
             foreach ($value as $item) {
                 if ($item === null) {
                     $placeholders[] = 'NULL';
                 } elseif ($item instanceof ExpressionInterface) {
                     $placeholders[] = $item instanceof QueryInterface
                         ? $this->buildNestedSubquery($item, $dbType, $dimension - 1, $params)
-                        : $queryBuilder->buildExpression($item, $params);
+                        /** @phpstan-ignore argument.type */ : $queryBuilder->buildExpression($item, $params);
                 } else {
                     $placeholders[] = $this->buildNestedValue($item, $dbType, $column, $dimension - 1, $params);
                 }
@@ -181,10 +196,10 @@ final class ArrayValueBuilder extends AbstractArrayValueBuilder
     /**
      * Converts array values for use in a db query.
      *
-     * @param iterable $value The array or iterable object.
+     * @param iterable<int|string, mixed> $value The array or iterable object.
      * @param ColumnInterface $column The column instance to typecast values.
      *
-     * @return iterable Converted values.
+     * @return iterable<int|string, mixed> Converted values.
      */
     private function dbTypecast(iterable $value, ColumnInterface $column): iterable
     {

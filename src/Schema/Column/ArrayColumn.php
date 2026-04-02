@@ -17,6 +17,7 @@ final class ArrayColumn extends AbstractArrayColumn
 {
     /**
      * @param string|null $value The string retrieved value from the database that can be parsed into an array.
+     * @return array<int|string, mixed>|null
      */
     public function phpTypecast(mixed $value): ?array
     {
