@@ -1,0 +1,159 @@
+<?php
+
+declare(strict_types=1);
+
+namespace FastPHP\QueryBuilder\Driver\Mysql\Column;
+
+use FastPHP\QueryBuilder\Constant\ColumnType;
+use FastPHP\QueryBuilder\QueryBuilder\AbstractColumnDefinitionBuilder;
+use FastPHP\QueryBuilder\Schema\Column\ColumnInterface;
+use FastPHP\QueryBuilder\Schema\Column\EnumColumn;
+
+use function str_contains;
+use function version_compare;
+
+final class ColumnDefinitionBuilder extends AbstractColumnDefinitionBuilder
+{
+    protected const AUTO_INCREMENT_KEYWORD = 'AUTO_INCREMENT';
+
+    protected const TYPES_WITH_SIZE = [
+        'bit',
+        'tinyint',
+        'smallint',
+        'mediumint',
+        'int',
+        'integer',
+        'bigint',
+        'float',
+        'real',
+        'double',
+        'double precision',
+        'decimal',
+        'numeric',
+        'dec',
+        'fixed',
+        'char',
+        'character',
+        'national char',
+        'nchar',
+        'varchar',
+        'character varying',
+        'national varchar',
+        'nvarchar',
+        'text',
+        'binary',
+        'char byte',
+        'varbinary',
+        'blob',
+        'year',
+        'timestamp',
+        'datetime',
+        'time',
+    ];
+
+    protected const TYPES_WITH_SCALE = [
+        'float',
+        'real',
+        'double',
+        'double precision',
+        'decimal',
+        'numeric',
+        'dec',
+        'fixed',
+    ];
+
+    public function buildType(ColumnInterface $column): string
+    {
+        if ($column instanceof EnumColumn) {
+            $dbType = $this->getDbType($column);
+            if (strtolower($dbType) === 'enum') {
+                $values = array_map(
+                    $this->queryBuilder->getQuoter()->quoteValue(...),
+                    $column->getValues(),
+                );
+                return $dbType . '(' . implode(',', $values) . ')';
+            }
+        }
+
+        $dbType = parent::buildType($column);
+
+        if (!$column instanceof StringColumn || empty($column->getCharacterSet())) {
+            return $dbType;
+        }
+
+        return "$dbType CHARACTER SET " . $column->getCharacterSet();
+    }
+
+    protected function buildCheck(ColumnInterface $column): string
+    {
+        $check = $column->getCheck();
+
+        if ($column instanceof EnumColumn && $column->getDbType() === null && empty($check)) {
+            $dbType = $this->getDbType($column);
+            if ($dbType === 'enum') {
+                return '';
+            }
+        }
+
+        return parent::buildCheck($column);
+    }
+
+    protected function buildComment(ColumnInterface $column): string
+    {
+        $comment = $column->getComment();
+
+        return $comment === null ? '' : ' COMMENT ' . $this->queryBuilder->getQuoter()->quoteValue($comment);
+    }
+
+    protected function getDbType(ColumnInterface $column): string
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        $dbType = $column->getDbType() ?? match ($column->getType()) {
+            ColumnType::BOOLEAN => 'bit(1)',
+            ColumnType::BIT => 'bit',
+            ColumnType::TINYINT => 'tinyint',
+            ColumnType::SMALLINT => 'smallint',
+            ColumnType::INTEGER => 'int',
+            ColumnType::BIGINT => 'bigint',
+            ColumnType::FLOAT => 'float',
+            ColumnType::DOUBLE => 'double',
+            ColumnType::DECIMAL => 'decimal',
+            ColumnType::MONEY => 'decimal',
+            ColumnType::CHAR => 'char',
+            ColumnType::STRING => 'varchar(' . ($column->getSize() ?? 255) . ')',
+            ColumnType::TEXT => 'text',
+            ColumnType::BINARY => 'blob',
+            ColumnType::UUID => 'binary(16)',
+            ColumnType::TIMESTAMP => 'timestamp',
+            ColumnType::DATETIME => 'datetime',
+            ColumnType::DATETIMETZ => 'datetime',
+            ColumnType::TIME => 'time',
+            ColumnType::TIMETZ => 'time',
+            ColumnType::DATE => 'date',
+            ColumnType::ARRAY => 'json',
+            ColumnType::STRUCTURED => 'json',
+            ColumnType::JSON => 'json',
+            ColumnType::ENUM => 'enum',
+            default => 'varchar',
+        };
+
+        if ($dbType === 'double' && $column->getSize() !== null) {
+            return 'double(' . $column->getSize() . ',' . ($column->getScale() ?? 0) . ')';
+        }
+
+        return $dbType;
+    }
+
+    protected function getDefaultUuidExpression(): string
+    {
+        $serverVersion = $this->queryBuilder->getServerInfo()->getVersion();
+
+        if (!str_contains($serverVersion, 'MariaDB')
+            && version_compare($serverVersion, '8', '<')
+        ) {
+            return '';
+        }
+
+        return "(unhex(replace(uuid(),'-','')))";
+    }
+}

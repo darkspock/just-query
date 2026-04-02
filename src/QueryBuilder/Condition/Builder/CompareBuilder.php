@@ -1,0 +1,88 @@
+<?php
+
+declare(strict_types=1);
+
+namespace FastPHP\QueryBuilder\QueryBuilder\Condition\Builder;
+
+use FastPHP\QueryBuilder\Exception\NotSupportedException;
+use FastPHP\QueryBuilder\Expression\ExpressionBuilderInterface;
+use FastPHP\QueryBuilder\Expression\ExpressionInterface;
+use FastPHP\QueryBuilder\QueryBuilder\Condition\AbstractCompare;
+use FastPHP\QueryBuilder\QueryBuilder\Condition\Equals;
+use FastPHP\QueryBuilder\QueryBuilder\Condition\GreaterThan;
+use FastPHP\QueryBuilder\QueryBuilder\Condition\GreaterThanOrEqual;
+use FastPHP\QueryBuilder\QueryBuilder\Condition\LessThan;
+use FastPHP\QueryBuilder\QueryBuilder\Condition\LessThanOrEqual;
+use FastPHP\QueryBuilder\QueryBuilder\Condition\NotEquals;
+use FastPHP\QueryBuilder\QueryBuilder\QueryBuilderInterface;
+
+/**
+ * Build objects of {@see Equals}, {@see NotEquals}, {@see GreaterThan}, {@see GreaterThanOrEqual}, {@see LessThan},
+ * or {@see LessThanOrEqual} into SQL expressions.
+ *
+ * @implements ExpressionBuilderInterface<Equals|NotEquals|GreaterThan|GreaterThanOrEqual|LessThan|LessThanOrEqual>
+ */
+class CompareBuilder implements ExpressionBuilderInterface
+{
+    public function __construct(
+        private readonly QueryBuilderInterface $queryBuilder,
+    ) {}
+
+    /**
+     * Build SQL for comparison conditions.
+     *
+     * @param Equals|GreaterThan|GreaterThanOrEqual|LessThan|LessThanOrEqual|NotEquals $expression
+     *
+     * @throws NotSupportedException
+     */
+    public function build(ExpressionInterface $expression, array &$params = []): string
+    {
+        $column = $this->prepareColumn($expression->column, $params);
+        $value = $this->prepareValue($expression->value, $params);
+
+        $operator = $this->getOperator($expression);
+
+        if ($value === null) {
+            return match ($operator) {
+                '=' => "$column IS NULL",
+                '<>' => "$column IS NOT NULL",
+                default => "$column $operator NULL",
+            };
+        }
+
+        return "$column $operator $value";
+    }
+
+    /**
+     * @throws NotSupportedException
+     */
+    private function prepareColumn(string|ExpressionInterface $column, array &$params): string
+    {
+        if ($column instanceof ExpressionInterface) {
+            return $this->queryBuilder->buildExpression($column, $params);
+        }
+
+        return $this->queryBuilder->getQuoter()->quoteColumnName($column);
+    }
+
+    private function prepareValue(mixed $value, array &$params): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return $this->queryBuilder->buildValue($value, $params);
+    }
+
+    private function getOperator(AbstractCompare $expression): string
+    {
+        return match ($expression::class) {
+            Equals::class => '=',
+            NotEquals::class => '<>',
+            GreaterThan::class => '>',
+            GreaterThanOrEqual::class => '>=',
+            LessThan::class => '<',
+            LessThanOrEqual::class => '<=',
+        };
+    }
+}

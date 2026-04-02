@@ -1,0 +1,29 @@
+{
+    "name": "covermanager/fast-php-query-builder",
+    "description": "Fast, lightweight PHP Query Builder with JSON schema support. Forked from yiisoft/db + yiisoft/db-mysql.",
+    "license": "BSD-3-Clause",
+    "type": "library",
+    "require": {
+        "php": ">=8.1",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "psr/log": "^2.0|^3.0",
+        "psr/simple-cache": "^2.0|^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "FastPHP\\QueryBuilder\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FastPHP\\QueryBuilder\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
