@@ -1,4 +1,4 @@
-.PHONY: up down test test-unit test-integration
+.PHONY: up down test test-unit test-integration test-mysql test-pgsql
 
 up:
 	docker compose up -d --wait
@@ -14,3 +14,9 @@ test-unit:
 
 test-integration: up
 	vendor/bin/phpunit --testsuite Integration
+
+test-mysql: up
+	vendor/bin/phpunit tests/Integration/Mysql
+
+test-pgsql: up
+	vendor/bin/phpunit tests/Integration/Pgsql
