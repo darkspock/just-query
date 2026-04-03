@@ -125,6 +125,124 @@ $db->setTablePrefix('tbl_');
 $db->getTablePrefix(); // 'tbl_'
 ```
 
+## Framework Integration
+
+### Laravel
+
+Register JustQuery as a singleton in a Service Provider. This reuses Laravel's existing PDO connection:
+
+```php
+// app/Providers/AppServiceProvider.php
+use Illuminate\Support\ServiceProvider;
+use JustQuery\Driver\Mysql\Connection;
+use JustQuery\Schema\Provider\{SchemaProvider, SchemaMode};
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->singleton(Connection::class, function ($app) {
+            $pdo = $app['db']->connection()->getPdo();
+            $db = Connection::fromPdo($pdo);
+
+            $db->setSchemaProvider(new SchemaProvider(
+                SchemaMode::JSON,
+                jsonPath: base_path('database/schema/'),
+            ));
+
+            return $db;
+        });
+    }
+}
+```
+
+Usage anywhere via dependency injection or the container:
+
+```php
+use JustQuery\Driver\Mysql\Connection;
+use JustQuery\Query\Query;
+
+class UserController extends Controller
+{
+    public function index(Connection $db)
+    {
+        return (new Query($db))
+            ->from('users')
+            ->where(['status' => 'active'])
+            ->all();
+    }
+}
+```
+
+### Symfony
+
+Register JustQuery as a service in `services.yaml`:
+
+```yaml
+# config/services.yaml
+services:
+    JustQuery\Driver\Mysql\Connection:
+        factory: ['JustQuery\Driver\Mysql\Connection', 'fromDsn']
+        arguments:
+            $dsn: '%env(DATABASE_DSN)%'
+            $username: '%env(DATABASE_USER)%'
+            $password: '%env(DATABASE_PASSWORD)%'
+
+    JustQuery\Schema\Provider\SchemaProvider:
+        arguments:
+            $mode: !php/enum JustQuery\Schema\Provider\SchemaMode::JSON
+            $jsonPath: '%kernel.project_dir%/config/schema/'
+```
+
+Or reuse Doctrine's existing PDO connection:
+
+```yaml
+# config/services.yaml
+services:
+    JustQuery\Driver\Mysql\Connection:
+        factory: ['@App\Factory\JustQueryFactory', 'create']
+```
+
+```php
+// src/Factory/JustQueryFactory.php
+namespace App\Factory;
+
+use Doctrine\DBAL\Connection as DoctrineConnection;
+use JustQuery\Driver\Mysql\Connection;
+
+class JustQueryFactory
+{
+    public function __construct(private DoctrineConnection $doctrine) {}
+
+    public function create(): Connection
+    {
+        return Connection::fromPdo(
+            $this->doctrine->getNativeConnection(),
+        );
+    }
+}
+```
+
+Usage via autowiring:
+
+```php
+use JustQuery\Driver\Mysql\Connection;
+use JustQuery\Query\Query;
+
+class UserController extends AbstractController
+{
+    public function index(Connection $db): JsonResponse
+    {
+        $users = (new Query($db))
+            ->from('users')
+            ->where(['status' => 'active'])
+            ->all();
+
+        return $this->json($users);
+    }
+}
+```
+
 ## Quick Start
 
 ```php
