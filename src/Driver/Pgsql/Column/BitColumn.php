@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JustQuery\Driver\Pgsql\Column;
+
+use JustQuery\Constant\ColumnType;
+use JustQuery\Expression\ExpressionInterface;
+use JustQuery\Schema\Column\AbstractColumn;
+
+use function bindec;
+use function is_string;
+
+final class BitColumn extends AbstractColumn
+{
+    protected const DEFAULT_TYPE = ColumnType::BIT;
+
+    public function dbTypecast(mixed $value): string|ExpressionInterface|null
+    {
+        return BitColumnInternal::dbTypecast($value, $this->getSize());
+    }
+
+    public function phpTypecast(mixed $value): ?int
+    {
+        /** @var int|string|null $value */
+        if (is_string($value)) {
+            /** @var int */
+            return bindec($value);
+        }
+
+        return $value;
+    }
+}

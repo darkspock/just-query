@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JustQuery\Expression;
+
+use JustQuery\QueryBuilder\QueryBuilderInterface;
+
+use function is_string;
+
+/**
+ * Builds a SQL representation of a {@see CompositeExpression}.
+ *
+ * @implements ExpressionBuilderInterface<CompositeExpression>
+ */
+final class CompositeExpressionBuilder implements ExpressionBuilderInterface
+{
+    public function __construct(
+        private readonly QueryBuilderInterface $queryBuilder,
+    ) {}
+
+    /**
+     * @param array<int|string, mixed> $params
+     */
+    public function build(ExpressionInterface $expression, array &$params = []): string
+    {
+        $parts = [];
+        foreach ($expression->expressions as $e) {
+            $parts[] = is_string($e) ? $e : $this->queryBuilder->buildExpression($e, $params); // @phpstan-ignore argument.type
+        }
+        return implode($expression->separator, $parts);
+    }
+}

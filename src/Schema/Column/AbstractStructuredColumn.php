@@ -1,0 +1,62 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JustQuery\Schema\Column;
+
+use JustQuery\Constant\ColumnType;
+use JustQuery\Expression\ExpressionInterface;
+use JustQuery\Expression\Value\StructuredValue;
+
+/**
+ * Represents an abstract structured column.
+ *
+ * @see StructuredColumn for a structured column with eager parsing values retrieved from the database.
+ * @see StructuredLazyColumn for a structured column with lazy parsing values retrieved from the database.
+ */
+abstract class AbstractStructuredColumn extends AbstractColumn
+{
+    protected const DEFAULT_TYPE = ColumnType::STRUCTURED;
+
+    /**
+     * @var ColumnInterface[] Columns metadata of the structured type.
+     * @psalm-var array<string, ColumnInterface>
+     */
+    protected array $columns = [];
+
+    /**
+     * Set columns of the structured type.
+     *
+     * @param ColumnInterface[] $columns The metadata of the structured type columns.
+     * @psalm-param array<string, ColumnInterface> $columns
+     */
+    public function columns(array $columns): static
+    {
+        $this->columns = $columns;
+        return $this;
+    }
+
+    /**
+     * Get the metadata of the structured type columns.
+     *
+     * @return ColumnInterface[]
+     * @psalm-return array<string, ColumnInterface>
+     * @psalm-mutation-free
+     */
+    public function getColumns(): array
+    {
+        return $this->columns;
+    }
+
+    /**
+     * @param array<int|string, mixed>|object|string|null $value
+     */
+    public function dbTypecast(mixed $value): ?ExpressionInterface
+    {
+        if ($value === null || $value instanceof ExpressionInterface) {
+            return $value;
+        }
+
+        return new StructuredValue($value, $this); // @phpstan-ignore argument.type
+    }
+}

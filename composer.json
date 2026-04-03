@@ -1,0 +1,49 @@
+{
+    "name": "darkspock/just-query",
+    "description": "Production-grade PHP Query Builder with MySQL and PostgreSQL support. Safe bulk operations, conditional clauses, JSON schema, query profiler, and index hints. Zero framework coupling.",
+    "license": "BSD-3-Clause",
+    "type": "library",
+    "keywords": [
+        "database",
+        "query-builder",
+        "mysql",
+        "postgresql",
+        "pdo",
+        "sql",
+        "force-index",
+        "profiler",
+        "schema"
+    ],
+    "homepage": "https://github.com/darkspock/just-query",
+    "support": {
+        "issues": "https://github.com/darkspock/just-query/issues",
+        "source": "https://github.com/darkspock/just-query"
+    },
+    "require": {
+        "php": ">=8.3",
+        "ext-pdo": "*",
+        "psr/log": "^2.0|^3.0",
+        "psr/simple-cache": "^2.0|^3.0"
+    },
+    "suggest": {
+        "ext-pdo_mysql": "Required for MySQL driver support",
+        "ext-pdo_pgsql": "Required for PostgreSQL driver support"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "JustQuery\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "JustQuery\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

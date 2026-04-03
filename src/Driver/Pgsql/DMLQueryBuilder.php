@@ -1,0 +1,156 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JustQuery\Driver\Pgsql;
+
+use InvalidArgumentException;
+use JustQuery\Query\QueryInterface;
+use JustQuery\QueryBuilder\AbstractDMLQueryBuilder;
+
+use function array_map;
+use function implode;
+use function str_ends_with;
+use function substr;
+
+/**
+ * Implements a DML (Data Manipulation Language) SQL statements for PostgreSQL Server.
+ */
+final class DMLQueryBuilder extends AbstractDMLQueryBuilder
+{
+    public function insertReturningPks(string $table, array|QueryInterface $columns, array &$params = []): string
+    {
+        /** @phpstan-ignore parameterByRef.type */
+        $insertSql = $this->insert($table, $columns, $params);
+        $tableSchema = $this->schema->getTableSchema($table);
+        $primaryKeys = $tableSchema?->getPrimaryKey() ?? [];
+
+        if (empty($primaryKeys)) {
+            return $insertSql;
+        }
+
+        $primaryKeys = array_map($this->quoter->quoteColumnName(...), $primaryKeys);
+
+        return $insertSql . ' RETURNING ' . implode(', ', $primaryKeys);
+    }
+
+    public function resetSequence(string $table, int|string|null $value = null): string
+    {
+        $tableSchema = $this->schema->getTableSchema($table);
+
+        if ($tableSchema === null) {
+            throw new InvalidArgumentException("Table not found: '$table'.");
+        }
+
+        $sequence = $tableSchema->getSequenceName();
+
+        if ($sequence === null) {
+            throw new InvalidArgumentException("There is not sequence associated with table '$table'.");
+        }
+
+        /** @link https://www.postgresql.org/docs/8.1/static/functions-sequence.html */
+        $sequence = $this->quoter->quoteTableName($sequence);
+
+        if ($value === null) {
+            $table = $this->quoter->quoteTableName($table);
+            $key = $tableSchema->getPrimaryKey()[0];
+            $key = $this->quoter->quoteColumnName($key);
+            $value = "(SELECT COALESCE(MAX($key),0) FROM $table)+1";
+        }
+
+        return "SELECT SETVAL('$sequence',$value,false)";
+    }
+
+    public function upsert(
+        string $table,
+        array|QueryInterface $insertColumns,
+        array|bool $updateColumns = true,
+        array &$params = [],
+    ): string {
+        if (is_array($insertColumns)) {
+            $insertColumns = $this->filterWriteColumns($table, $insertColumns, false);
+        }
+
+        if (is_array($updateColumns)) {
+            $updateColumns = $this->filterWriteColumns($table, $updateColumns);
+        }
+
+        $insertSql = $this->buildInsertSql($table, $insertColumns, $params, false); // @phpstan-ignore parameterByRef.type
+
+        [$uniqueNames, , $updateNames] = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns);
+
+        if (empty($uniqueNames)) {
+            return $insertSql;
+        }
+
+        if (empty($updateColumns) || $updateNames === []) {
+            /** there are no columns to update */
+            return "$insertSql ON CONFLICT DO NOTHING";
+        }
+
+        $quotedUniqueNames = array_map($this->quoter->quoteColumnName(...), $uniqueNames);
+        $updates = $this->prepareUpsertSets($table, $updateColumns, $updateNames, $params); // @phpstan-ignore argument.type, argument.type
+
+        return $insertSql
+            . ' ON CONFLICT (' . implode(', ', $quotedUniqueNames) . ')'
+            . ' DO UPDATE SET ' . implode(', ', $updates);
+    }
+
+    public function upsertReturning(
+        string $table,
+        array|QueryInterface $insertColumns,
+        array|bool $updateColumns = true,
+        ?array $returnColumns = null,
+        array &$params = [],
+    ): string {
+        if (is_array($insertColumns)) {
+            $insertColumns = $this->filterWriteColumns($table, $insertColumns, false);
+        }
+
+        if (is_array($updateColumns)) {
+            $updateColumns = $this->filterWriteColumns($table, $updateColumns);
+        }
+
+        $upsertSql = $this->upsert($table, $insertColumns, $updateColumns, $params);
+
+        $returnColumns ??= $this->schema->getTableSchema($table)?->getColumnNames();
+
+        if (empty($returnColumns)) {
+            return $upsertSql;
+        }
+
+        $returnColumns = array_map($this->quoter->quoteColumnName(...), $returnColumns);
+
+        if (str_ends_with($upsertSql, ' ON CONFLICT DO NOTHING')) {
+            $tableName = $this->quoter->quoteTableName($table);
+            $dummyColumn = $this->getDummyColumn($table);
+
+            $uniqueNames = $this->prepareUpsertColumns($table, $insertColumns, $updateColumns)[0];
+            $quotedUniqueNames = array_map($this->quoter->quoteColumnName(...), $uniqueNames);
+
+            $upsertSql = substr($upsertSql, 0, -10)
+                . '(' . implode(', ', $quotedUniqueNames) . ')'
+                . " DO UPDATE SET $dummyColumn = $tableName.$dummyColumn";
+        }
+
+        return $upsertSql . ' RETURNING ' . implode(', ', $returnColumns);
+    }
+
+    private function getDummyColumn(string $table): string
+    {
+        /** @psalm-suppress PossiblyNullReference */
+        $columns = $this->schema->getTableSchema($table)->getColumns(); // @phpstan-ignore method.nonObject
+
+        foreach ($columns as $column) {
+            if ($column->isPrimaryKey() || $column->isUnique()) {
+                continue;
+            }
+
+            /** @psalm-suppress PossiblyNullArgument */
+            return $this->quoter->quoteColumnName($column->getName()); // @phpstan-ignore argument.type
+        }
+
+        /** @psalm-suppress PossiblyNullArgument, PossiblyFalseReference */
+        return $this->quoter->quoteColumnName(end($columns)->getName()); // @phpstan-ignore method.nonObject,argument.type
+    }
+}

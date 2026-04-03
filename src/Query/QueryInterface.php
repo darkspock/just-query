@@ -1,0 +1,447 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JustQuery\Query;
+
+use Closure;
+use Throwable;
+use JustQuery\Command\CommandInterface;
+use JustQuery\Connection\ConnectionInterface;
+use JustQuery\Exception\Exception;
+use InvalidArgumentException;
+use JustQuery\Exception\InvalidConfigException;
+use JustQuery\Exception\NotSupportedException;
+use JustQuery\Expression\ExpressionInterface;
+use JustQuery\QueryBuilder\QueryBuilderInterface;
+
+/**
+ * Defines several methods for building and executing database queries, including methods for selecting
+ * data, inserting data, updating data, and deleting data.
+ *
+ * It also defines methods for specifying the conditions for a query, as well as methods for pagination and sorting.
+ *
+ * It has support for getting {@see one()} instance or {@see all()}.
+ *
+ * Allows pagination via {@see limit()} and {@see offset()}.
+ *
+ * Sorting is supported via {@see orderBy()} and items can be limited to match some conditions using {@see where()}.
+ *
+ * @phpstan-type IndexBy Closure(array<int|string, mixed>|object):int|string
+ * @phpstan-type ResultCallback Closure(non-empty-array<array<string,mixed>>):non-empty-array<array<string,mixed>|object>
+ * @phpstan-type ResultCallbackOne Closure(array<string,mixed>):(array<string,mixed>|object)
+ * @phpstan-type JoinTable array<ExpressionInterface|string>|ExpressionInterface|string
+ * @phpstan-type Join list{string, JoinTable, array<int|string, mixed>|ExpressionInterface|string}
+ * @phpstan-type From array<string|ExpressionInterface>
+ * @phpstan-type RawFrom array<string|ExpressionInterface>|ExpressionInterface|string
+ * @psalm-type IndexBy = Closure(array|object):int|string
+ * @psalm-type ResultCallback = Closure(non-empty-array<array<string,mixed>>):non-empty-array<array<string,mixed>|object>
+ * @psalm-type ResultCallbackOne = Closure(array<string,mixed>):(array<string,mixed>|object)
+ * @psalm-type JoinTable = array<ExpressionInterface|string>|ExpressionInterface|string
+ * @psalm-type Join = list{string, JoinTable, array<int|string, mixed>|ExpressionInterface|string}
+ * @psalm-type From = array<string|ExpressionInterface>
+ * @psalm-type RawFrom = array<string|ExpressionInterface>|ExpressionInterface|string
+ * @psalm-import-type ParamsType from ConnectionInterface
+ * @psalm-import-type SelectValue from QueryPartsInterface
+ */
+interface QueryInterface extends ExpressionInterface, QueryPartsInterface, QueryFunctionsInterface
+{
+    /**
+     * Adds more parameters to bind to the query.
+     *
+     * @param array<int|string, mixed> $params The list of query parameter values indexed by parameter placeholders.
+     * For example, `[':name' => 'Dan', ':age' => 31]`.
+     *
+     * @psalm-param ParamsType $params
+     *
+     * @see params()
+     */
+    public function addParams(array $params): static;
+
+    /**
+     * Executes the query and returns all results as an array.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
+     *
+     * @return array<int, array<string, mixed>>|array<int, object> All rows of the query result. Each array element is an `array` or `object` representing
+     * a row of data. Empty array if the query results in nothing.
+     */
+    public function all(): array;
+
+    /**
+     * Starts a batch query.
+     *
+     * A batch query supports fetching data in batches, which can keep the memory usage under a limit.
+     *
+     * This method will return a {@see BatchQueryResultInterface} object which implements the {@see \Iterator} interface
+     * and can be traversed to retrieve the data in batches.
+     *
+     * For example,
+     *
+     * ```php
+     * $query = (new Query)->from('user');
+     *
+     * foreach ($query->batch() as $rows) {
+     *     // $rows is an array of 100 or fewer rows from user table
+     * }
+     * ```
+     *
+     * @param int $batchSize The number of records to fetch in each batch.
+     *
+     * @return BatchQueryResultInterface The batch query result. It implements the {@see \Iterator} interface and can be
+     * traversed to retrieve the data in batches.
+     */
+    public function batch(int $batchSize = 100): BatchQueryResultInterface;
+
+    /**
+     * Executes the query and returns the first column of the result.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws NotSupportedException
+     * @throws Throwable
+     *
+     * @return array<array-key, mixed> The first column of the query result. It returns an empty array if the query results in nothing.
+     */
+    public function column(): array;
+
+    /**
+     * Creates a DB command to execute the query.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     *
+     * @return CommandInterface The created DB command instance.
+     */
+    public function createCommand(): CommandInterface;
+
+    /**
+     * Creates data reader to retrieve data row by row.
+     *
+     * For example,
+     *
+     * ```php
+     * $query = (new Query)->from('user');
+     *
+     * foreach ($query->each() as $row) {
+     * }
+     * ```
+     *
+     * @return DataReaderInterface The data reader. It implements the {@see \Iterator} interface and can be
+     * traversed to retrieve each row of data.
+     */
+    public function each(): DataReaderInterface;
+
+    /**
+     * Sets whether to emulate query execution without actually executing a query.
+     *
+     * When enabled, methods returning results such as {@see one()}, {@see all()}, or {@see exists()}
+     * will return empty or `false` values.
+     *
+     * You should use this method in case your program logic requires that a query shouldn't return any results.
+     *
+     * @param bool $value Whether to emulate query execution.
+     */
+    public function emulateExecution(bool $value = true): static;
+
+    /**
+     * Returns a value indicating whether the query result has any row of data.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
+     *
+     * @return bool whether the query result has any row of data.
+     */
+    public function exists(): bool;
+
+    /**
+     * @return bool The "distinct" value.
+     */
+    public function getDistinct(): bool;
+
+    /**
+     * @return string[] The "for" values.
+     *
+     * @psalm-return list<string>
+     */
+    public function getFor(): array;
+
+    /**
+     * @return array The "from" value.
+     * @psalm-return From
+     */
+    public function getFrom(): array;
+
+    /**
+     * @return array<string, string|ExpressionInterface> The "group by" value.
+     */
+    public function getGroupBy(): array;
+
+    /**
+     * @return array<int|string, mixed>|ExpressionInterface|string|null The "having" value.
+     */
+    public function getHaving(): string|array|ExpressionInterface|null;
+
+    /**
+     * @return (Closure(array|object): int)|string|null The "index by" value.
+     *
+     * @psalm-return IndexBy|null
+     */
+    public function getIndexBy(): Closure|string|null;
+
+    /**
+     * @return list<array{string, array<ExpressionInterface|string>|ExpressionInterface|string, array<int|string, mixed>|ExpressionInterface|string}> The "join" value.
+     *
+     * The format is:
+     *
+     * ```
+     * [
+     *     ['INNER JOIN', 'table1', 'table1.id = table2.id'],
+     *     ['LEFT JOIN', 'table3', 'table1.id = table3.id'],
+     * ]
+     * ```
+     *
+     * @psalm-return list<Join>
+     */
+    public function getJoins(): array;
+
+    /**
+     * @return ExpressionInterface|int|null The "limit" value.
+     */
+    public function getLimit(): ExpressionInterface|int|null;
+
+    /**
+     * @return ExpressionInterface|int|null The "offset" value.
+     */
+    public function getOffset(): ExpressionInterface|int|null;
+
+    /**
+     * @return array<string, int> The "order by" value.
+     */
+    public function getOrderBy(): array;
+
+    /**
+     * @return array<string, mixed> The "params" value.
+     */
+    public function getParams(): array;
+
+    /**
+     * Returns the callback to be called on all rows of the query result.
+     * `null` will be returned if the callback is not set.
+     *
+     * @psalm-return ResultCallback|null
+     */
+    public function getResultCallback(): ?Closure;
+
+    /**
+     * @return array The "select" value.
+     * @psalm-return SelectValue
+     */
+    public function getSelect(): array;
+
+    /**
+     * @return string|null The "select option" value.
+     */
+    public function getSelectOption(): ?string;
+
+    /**
+     * Returns table names used in {@see from()} indexed by aliases.
+     *
+     * Both aliases and names are enclosed into {{ and }}.
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return array The table names indexed by aliases.
+     * @psalm-return array<string, ExpressionInterface|string>
+     */
+    public function getTablesUsedInFrom(): array;
+
+    /**
+     * @return array<int, array{query: QueryInterface|string, all: bool}> The "union" values.
+     *
+     * The format is:
+     *
+     * ```php
+     * ['SELECT * FROM table1', 'SELECT * FROM table2']
+     * ```
+     */
+    public function getUnions(): array;
+
+    /**
+     * @return array<int|string, mixed>|ExpressionInterface|string|null The "where" value.
+     */
+    public function getWhere(): array|string|ExpressionInterface|null;
+
+    /**
+     * @return WithQuery[] The "withQueries" value.
+     */
+    public function getWithQueries(): array;
+
+    /**
+     * Executes the query and returns a single row of a result.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
+     *
+     * @return array<array-key, mixed>|object|null The first row as an `array` or as an `object` of the query result. `null` if the query
+     * results in nothing.
+     */
+    public function one(): array|object|null;
+
+    /**
+     * Sets the parameters to bind to the query.
+     *
+     * @param array<int|string, mixed> $params List of query parameter values indexed by parameter placeholders.
+     * For example, `[':name' => 'Dan', ':age' => 31]`.
+     *
+     * @psalm-param ParamsType $params
+     *
+     * @see addParams()
+     */
+    public function params(array $params): static;
+
+    /**
+     * Prepare for building SQL.
+     *
+     * {@see QueryBuilderInterface} uses this method when it starts to build SQL from a query object.
+     * You may override this method to do some final preparation work when converting a query into an SQL statement.
+     *
+     * @param QueryBuilderInterface $builder The query builder.
+     */
+    public function prepare(QueryBuilderInterface $builder): self;
+
+    /**
+     * Sets the callback, to be called on all rows of the query result before returning them.
+     *
+     * For example:
+     *
+     * ```php
+     * $users = $db->createQuery()
+     *     ->from('user')
+     *     ->resultCallback(function (array $rows): array {
+     *         foreach ($rows as &$row) {
+     *             $row['name'] = strtoupper($row['name']);
+     *         }
+     *         return $rows;
+     *     })
+     *     ->all();
+     * ```
+     *
+     * @psalm-param ResultCallback|null $resultCallback
+     */
+    public function resultCallback(?Closure $resultCallback): static;
+
+    /**
+     * Returns the query results as a scalar value.
+     * The value returned will be the first column in the first row of the query results.
+     * Do not use this method for `boolean` values as it returns `false` if the query result is empty.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
+     *
+     * @return bool|float|int|string|null The value of the first column in the first row of the query result. False is
+     * returned if the query result is empty.
+     */
+    public function scalar(): bool|int|string|float|null;
+
+    /**
+     * Returns the index hints for this query.
+     *
+     * @return array<string, list<array{type: string, indexes: list<string>}>> Index hints keyed by table name.
+     */
+    public function getIndexHints(): array;
+
+    /**
+     * Adds a FORCE INDEX hint for the specified table.
+     *
+     * This is a MySQL-specific feature that forces the optimizer to use the specified indexes.
+     *
+     * ```php
+     * $query->from('users')->forceIndex('users', 'idx_email');
+     * $query->from('users')->forceIndex('users', ['idx_email', 'idx_name']);
+     * ```
+     *
+     * @param string $table The table name to apply the hint to.
+     * @param list<string>|string $indexes The index name(s) to force.
+     */
+    public function forceIndex(string $table, array|string $indexes): static;
+
+    /**
+     * Adds a USE INDEX hint for the specified table.
+     *
+     * This is a MySQL-specific feature that suggests the optimizer to use the specified indexes.
+     *
+     * ```php
+     * $query->from('users')->useIndex('users', ['idx_email', 'idx_name']);
+     * ```
+     *
+     * @param string $table The table name to apply the hint to.
+     * @param list<string>|string $indexes The index name(s) to use.
+     */
+    public function useIndex(string $table, array|string $indexes): static;
+
+    /**
+     * Adds an IGNORE INDEX hint for the specified table.
+     *
+     * This is a MySQL-specific feature that tells the optimizer to ignore the specified indexes.
+     *
+     * ```php
+     * $query->from('users')->ignoreIndex('users', 'idx_old');
+     * ```
+     *
+     * @param string $table The table name to apply the hint to.
+     * @param list<string>|string $indexes The index name(s) to ignore.
+     */
+    public function ignoreIndex(string $table, array|string $indexes): static;
+
+    /**
+     * @return bool Whether to emulate query execution.
+     */
+    public function shouldEmulateExecution(): bool;
+
+    /**
+     * Returns a copy of the instance with enabled or disabled typecasting of values when retrieving records from DB.
+     */
+    public function withTypecasting(bool $typecasting = true): static;
+
+    /**
+     * Apply the callback if the given condition is truthy.
+     *
+     * ```php
+     * $query->from('users')
+     *     ->when($status, fn($q, $val) => $q->andWhere(['status' => $val]))
+     *     ->when($sortBy, fn($q, $val) => $q->orderBy($val), fn($q) => $q->orderBy('id'));
+     * ```
+     *
+     * @param mixed $condition The condition to evaluate.
+     * @param Closure $callback Called with ($this, $condition) when condition is truthy.
+     * @param Closure|null $default Called with ($this, $condition) when condition is falsy.
+     */
+    public function when(mixed $condition, Closure $callback, ?Closure $default = null): static;
+
+    /**
+     * Iterates over query results in chunks using cursor-based pagination (WHERE pk > last_pk).
+     *
+     * Unlike {@see batch()} which uses OFFSET/LIMIT, this method is safe to use when modifying
+     * records during iteration, and performs better on large tables.
+     *
+     * ```php
+     * $query->from('users')->where(['active' => false])->chunkById(100, function (array $rows) use ($db) {
+     *     foreach ($rows as $row) {
+     *         $db->createCommand()->update('users', ['active' => true], ['id' => $row['id']])->execute();
+     *     }
+     * });
+     * ```
+     *
+     * @param int $size The number of records per chunk.
+     * @param Closure $callback Called with each chunk (array of rows). Return `false` to stop.
+     * @param string $column The column to use for cursor pagination. Defaults to 'id'.
+     * @return bool Whether all chunks were processed (true) or stopped early (false).
+     */
+    public function chunkById(int $size, Closure $callback, string $column = 'id'): bool;
+}

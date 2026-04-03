@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+namespace JustQuery\Expression\Value\Builder;
+
+use JustQuery\Expression\Value\Param;
+use JustQuery\Constant\DataType;
+use JustQuery\Expression\Value\ArrayValue;
+use JustQuery\Query\QueryInterface;
+use JustQuery\Schema\Data\JsonLazyArray;
+use JustQuery\Schema\Data\LazyArray;
+use JustQuery\Schema\Data\LazyArrayInterface;
+use JustQuery\Schema\Data\StructuredLazyArray;
+
+use function is_array;
+use function iterator_to_array;
+use function json_encode;
+
+use const JSON_THROW_ON_ERROR;
+
+/**
+ * Default expression builder for {@see ArrayValue}. Builds an expression as a JSON.
+ */
+final class ArrayValueBuilder extends AbstractArrayValueBuilder
+{
+    /**
+     * @param array<int|string, mixed> $params
+     */
+    protected function buildStringValue(string $value, ArrayValue $expression, array &$params): string
+    {
+        $param = new Param($value, DataType::STRING);
+
+        return $this->queryBuilder->bindParam($param, $params); // @phpstan-ignore argument.type
+    }
+
+    /**
+     * @param array<int|string, mixed> $params
+     */
+    protected function buildSubquery(QueryInterface $query, ArrayValue $expression, array &$params): string
+    {
+        [$sql, $params] = $this->queryBuilder->build($query, $params); // @phpstan-ignore argument.type
+
+        return "($sql)";
+    }
+
+    /**
+     * @param iterable<int|string, mixed> $value
+     * @param array<int|string, mixed> $params
+     */
+    protected function buildValue(iterable $value, ArrayValue $expression, array &$params): string
+    {
+        if (!is_array($value)) {
+            $value = iterator_to_array($value, false);
+        }
+
+        return $this->buildStringValue(json_encode($value, JSON_THROW_ON_ERROR), $expression, $params);
+    }
+
+    /**
+     * @return array<int|string, mixed>|string
+     */
+    protected function getLazyArrayValue(LazyArrayInterface $value): array|string
+    {
+        return match ($value::class) {
+            LazyArray::class, JsonLazyArray::class, StructuredLazyArray::class => $value->getRawValue(),
+            default => $value->getValue(),
+        };
+    }
+}
