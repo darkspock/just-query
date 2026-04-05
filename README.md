@@ -4,34 +4,6 @@ A high-performance PHP Query Builder built for production SaaS applications wher
 
 Full MySQL and PostgreSQL support. Zero framework coupling. Drop into any PHP 8.3+ project.
 
-## Why This Exists
-
-JustQuery is a fork of the excellent [yiisoft/db](https://github.com/yiisoft/db) and [yiisoft/db-mysql](https://github.com/yiisoft/db-mysql) libraries.
-
-We maintain this fork because our production SaaS (CoverManager) needs capabilities that don't fit the upstream project's scope or release timeline:
-
-### Features rejected or out-of-scope upstream
-
-- **`FORCE INDEX` / `USE INDEX` / `IGNORE INDEX`** — MySQL optimizer hints are critical for large tables where the query planner makes poor index choices. This was rejected upstream as too MySQL-specific. For us, it's the difference between a 50ms query and a 12-second table scan on a 40M-row table.
-
-- **Configurable schema provider with JSON mode** — Upstream requires either database introspection or a cache layer (Redis/Memcached) for type casting. In rolling deployments where schema changes happen before code deploys, this causes downtime. Our JSON schema mode reads column definitions from committed JSON files — zero DB overhead, zero cache dependency, fully deterministic.
-
-- **Built-in query profiler** — Upstream delegates profiling to external Yii packages. We need a self-contained profiler that works in any framework (CodeIgniter 3, standalone scripts, queue workers) with zero dependencies.
-
-- **Computed column protection** — Upstream doesn't know which columns are computed/generated. Our schema provider marks columns as computed, and the query builder automatically excludes them from INSERT and UPDATE operations. No more "Column 'total_amount' is a generated column" errors.
-
-- **Shared PDO connections** — Our legacy CodeIgniter 3 app already has a PDO connection. Upstream creates its own. We need to pass in an existing `\PDO` instance and share it.
-
-### Performance and operational priorities
-
-Upstream yiisoft/db is designed for the Yii 3 framework ecosystem. It prioritizes broad compatibility and clean abstractions. We prioritize:
-
-- **Query execution control** — index hints, optimizer hints, and direct control over the SQL the database sees.
-- **Zero-overhead schema** — JSON schema files that ship with code, not runtime introspection.
-- **Observability** — every query profiled with timing, params, and errors — in any PHP runtime.
-- **Static analysis** — PHPStan level max with zero baseline, enforced in CI.
-- **Minimal dependencies** — only PSR interfaces (psr/log, psr/simple-cache). No framework coupling.
-
 ## Benchmarks
 
 Compared against Eloquent 12.x and Doctrine DBAL 4.x (PHP 8.5, MySQL 8.0, 50k+ rows). Ties Doctrine on reads, **26x faster on batch inserts**, and matches Eloquent's code brevity — without the ORM overhead. [Full comparison](comparison.md).
@@ -1190,13 +1162,13 @@ vendor/bin/phpstan analyse
 - **MySQL 8.0+ optimizer hints** — `/*+ ... */` comment-style hints beyond index hints
 - **Prepared statement caching** — reuse server-side prepared statements across queries
 
+## Why a Fork?
+
+JustQuery is a fork of [yiisoft/db](https://github.com/yiisoft/db) v2.0.1 and [yiisoft/db-mysql](https://github.com/yiisoft/db-mysql). We forked because we needed features that don't fit upstream's scope: MySQL index hints (`FORCE INDEX`, `USE INDEX`, `IGNORE INDEX`), JSON-based schema for rolling deployments, a built-in query profiler, computed column protection, and shared PDO connections. See the [full comparison](comparison.md) for details.
+
 ## License
 
 BSD-3-Clause. See [LICENSE.md](LICENSE.md).
-
-## Attribution
-
-This project is a fork of [yiisoft/db](https://github.com/yiisoft/db) v2.0.1 and [yiisoft/db-mysql](https://github.com/yiisoft/db-mysql), both created by [Yii Software](https://www.yiiframework.com/).
 
 We are deeply grateful to the **Yii framework team and community** for building and open-sourcing an exceptionally well-designed database abstraction layer. The query builder architecture, the Expression/Builder pattern, the condition system, and the overall code quality of yiisoft/db are outstanding work that made this project possible.
 
